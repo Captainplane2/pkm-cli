@@ -1,15 +1,128 @@
-@startuml
-'https://plantuml.com/sequence-diagram
+@startuml PKM实体类图
+' 设置皮肤参数，让图表更清晰美观
+skinparam {
+  BackgroundColor FloralWhite
+  ArrowColor #2C3E50
+  BorderColor #2C3E50
+  TitleBorderColor #2C3E50
+  Shadowing false
+  RoundCorner 10
+  Class {
+    BackgroundColor White
+    BorderColor #2C3E50
+    ArrowColor #2C3E50
+    FontSize 13
+    AttributeFontSize 12
+    MethodFontSize 12
+  }
+  Note {
+    BackgroundColor LightYellow
+    BorderColor DarkOrange
+  }
+}
 
-autonumber
+title 个人知识管理系统(PKM) - 实体类图
 
-== Initialization ==
+' 定义基类 Note
+class Note {
+  - id: Long
+  - title: String
+  - content: String
+  - createdAt: LocalDateTime
+  - updatedAt: LocalDateTime
+  - tags: Set<Tag> = new HashSet<>()
+  --
+  + Note(title: String, content: String)
+  + getId(): Long
+  + setId(id: Long): void
+  + getTitle(): String
+  + setTitle(title: String): void
+  + getContent(): String
+  + setContent(content: String): void
+  + getCreatedAt(): LocalDateTime
+  + getUpdatedAt(): LocalDateTime
+  + getTags(): Set<Tag>
+  + addTag(tag: Tag): void
+  + removeTag(tag: Tag): void
+  + updateContent(newContent: String): void
+  + updateTitle(newTitle: String): void
+  + toString(): String
+  + equals(obj: Object): boolean
+  + hashCode(): int
+}
 
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
+' 定义标签类 Tag
+class Tag {
+  - id: Long
+  - name: String
+  --
+  + Tag()
+  + Tag(name: String)
+  + getId(): Long
+  + setId(id: Long): void
+  + getName(): String
+  + setName(name: String): void
+  + toString(): String
+  + equals(obj: Object): boolean
+  + hashCode(): int
+}
 
-== Repetition ==
+' 定义文本笔记子类
+class TextNote {
+  - summary: String
+  --
+  + TextNote(title: String, content: String)
+  + TextNote(title: String, content: String, summary: String)
+  + getSummary(): String
+  + setSummary(summary: String): void
+}
 
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: another authentication Response
+' 定义链接笔记子类
+class LinkNote {
+  - url: String
+  - favicon: String
+  --
+  + LinkNote(title: String, content: String, url: String)
+  + getUrl(): String
+  + setUrl(url: String): void
+  + getFavicon(): String
+  + setFavicon(favicon: String): void
+  + validateUrl(): boolean
+}
+
+' 定义图片笔记子类
+class ImageNote {
+  - imagePath: String
+  - imageSize: Long
+  - imageFormat: String
+  --
+  + ImageNote(title: String, content: String, imagePath: String)
+  + getImagePath(): String
+  + setImagePath(imagePath: String): void
+  + getImageSize(): Long
+  + setImageSize(imageSize: Long): void
+  + getImageFormat(): String
+  + setImageFormat(imageFormat: String): void
+  + resizeImage(newWidth: int, newHeight: int): void
+}
+
+' 继承关系
+Note <|-- TextNote
+Note <|-- LinkNote
+Note <|-- ImageNote
+
+' 多对多关联关系
+Note "1" *-- "*" Tag : tagged with >
+
+' 添加说明注释
+note top of Note
+  笔记基类，包含所有笔记的
+  通用属性和行为
+  创建时间(createdAt)在构造时自动设置
+  更新时间(updatedAt)在修改内容时自动更新
+end note
+
+
+
+
 @enduml
