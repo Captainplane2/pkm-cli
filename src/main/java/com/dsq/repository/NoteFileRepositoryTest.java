@@ -90,18 +90,27 @@ class NoteFileRepositoryTest {
 
     @Test
     void testBackupMechanism() throws FileOperationException {
-        // 创建初始笔记并保存
+        // 创建初始笔记并保存（第一次保存，不会创建备份，因为原文件不存在）
         Note note1 = new Note("1", "初始笔记", "初始内容");
         List<Note> initialNotes = Arrays.asList(note1);
         repository.saveNotes(initialNotes);
 
-        // 验证备份文件存在
+        // 验证第一次保存时备份文件不存在（因为原文件之前不存在）
         File backupFile = new File(testDataFile + ".backup");
-        assertTrue(backupFile.exists());
+        assertFalse(backupFile.exists(), "第一次保存时不应该创建备份");
 
-        // 加载验证
+        // 第二次保存（此时原文件已存在，应该创建备份）
+        Note note2 = new Note("2", "第二次笔记", "第二次内容");
+        List<Note> secondNotes = Arrays.asList(note1, note2);
+        repository.saveNotes(secondNotes);
+
+        // 验证第二次保存时备份文件存在
+        assertTrue(backupFile.exists(), "第二次保存时应该创建备份");
+
+        // 加载验证数据正确性
         List<Note> loadedNotes = repository.loadNotes();
-        assertEquals(1, loadedNotes.size());
+        assertEquals(2, loadedNotes.size());
+        assertEquals("第二次笔记", loadedNotes.get(1).getTitle());
     }
 
     @Test
