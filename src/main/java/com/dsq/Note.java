@@ -1,14 +1,17 @@
 package com.dsq;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * 笔记实体类 - 根据实验指导书要求
+ * 笔记实体类 - 实现序列化支持
  */
-public class Note {
+public class Note implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String id;
     private String title;
     private String content;
@@ -16,7 +19,7 @@ public class Note {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // 精简构造方法
+    // 构造方法
     public Note(String title, String content) {
         this.title = title;
         this.content = content;
@@ -57,7 +60,7 @@ public class Note {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
-    // 标签管理方法 - 实验指导书要求
+    // 标签管理方法
     public void addTag(String tag) {
         if (tag != null && !tag.trim().isEmpty() && !tags.contains(tag.trim())) {
             tags.add(tag.trim());
@@ -77,11 +80,17 @@ public class Note {
 
     // 实用方法
     public boolean hasAllTags(List<String> tagList) {
-        return tagList != null && tagList.stream().allMatch(this::hasTag);
+        if (tagList == null || tagList.isEmpty()) {
+            return false;
+        }
+        return tagList.stream().allMatch(this::hasTag);
     }
 
     public boolean hasAnyTag(List<String> tagList) {
-        return tagList != null && tagList.stream().anyMatch(this::hasTag);
+        if (tagList == null || tagList.isEmpty()) {
+            return false;
+        }
+        return tagList.stream().anyMatch(this::hasTag);
     }
 
     @Override

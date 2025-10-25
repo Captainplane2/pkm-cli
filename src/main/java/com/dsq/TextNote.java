@@ -1,12 +1,16 @@
 package com.dsq;
 
+import java.io.Serializable;
+
 /**
- * 文本笔记子类 - 精简设计，避免构造方法冲突
+ * 文本笔记子类 - 实现序列化支持
  */
-public class TextNote extends Note {
+public class TextNote extends Note implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String summary;
 
-    // 只保留必要的构造方法，避免冲突
+    // 构造方法
     public TextNote(String title, String content) {
         super(title, content);
     }
