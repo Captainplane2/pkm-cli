@@ -1,4 +1,4 @@
-package com.dsq;
+package com.dsq.exception;
 
 /**
  * PKM系统基础异常类
