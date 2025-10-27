@@ -1,4 +1,4 @@
-package com.dsq;
+package com.dsq.app;
 
 /**
  * Hello world!
