@@ -1,9 +1,7 @@
 package com.dsq.repository;
 
 import com.dsq.Note;
-import com.dsq.ExportFormat;
 import com.dsq.exception.FileOperationException;
-import com.dsq.exception.SerializationException;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -22,6 +20,7 @@ public class NoteFileRepository {
 
     private final String dataFilePath;
 
+    //构造方法
     public NoteFileRepository() {
         this.dataFilePath = DEFAULT_DATA_FILE;
     }
@@ -30,9 +29,8 @@ public class NoteFileRepository {
         this.dataFilePath = dataFilePath;
     }
 
-    /**
-     * 保存笔记列表到文件
-     */
+
+    //保存笔记列表到文件
     public void saveNotes(List<Note> notes) throws FileOperationException {
         if (notes == null) {
             throw new FileOperationException("保存笔记", dataFilePath, "笔记列表为空");
@@ -46,11 +44,11 @@ public class NoteFileRepository {
                 new FileOutputStream(dataFilePath))) {
             oos.writeObject(notes);  // 序列化整个笔记列表
             oos.flush();
-            System.out.println("笔记数据保存成功：" + dataFilePath + "，共 " + notes.size() + " 条笔记");
+            System.out.println("保存笔记数据成功：" + dataFilePath + "，共 " + notes.size() + " 条笔记");
         } catch (IOException e) {
             // 保存失败时恢复备份
             restoreBackup(dataFilePath);
-            throw new FileOperationException("保存笔记数据", dataFilePath, e);
+            throw new FileOperationException("保存笔记数据失败：", dataFilePath, e);
         }
     }
 
@@ -61,7 +59,7 @@ public class NoteFileRepository {
     public List<Note> loadNotes() throws FileOperationException {
         File file = new File(dataFilePath);
         if (!file.exists() || file.length() == 0) {
-            System.out.println("数据文件不存在或为空，返回空列表");
+            System.out.println("自动保存：数据文件首次创建、不存在或为空");
             return new ArrayList<>();
         }
 
@@ -175,5 +173,9 @@ public class NoteFileRepository {
             file.delete();
             System.out.println("删除数据文件: " + dataFilePath);
         }
+        else {
+            System.out.println("数据文件不存在: " + dataFilePath);
+        }
+
     }
 }

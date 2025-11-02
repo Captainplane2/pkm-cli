@@ -30,6 +30,7 @@ public class CommandParser {
         this.isRunning = true;
     }
 
+    //启动程序，解析启动参数
     public void parseArgs(String[] args) {
         if (args.length == 0) {
             startInteractiveMode();
@@ -38,6 +39,7 @@ public class CommandParser {
         }
     }
 
+    //启动时输出主菜单文本
     private void startInteractiveMode() {
         System.out.println("欢迎使用个人知识管理系统（CLI版）");
         System.out.println("输入 'help' 查看可用命令，输入 'exit' 退出程序");
@@ -57,18 +59,32 @@ public class CommandParser {
         System.out.println("感谢使用个人知识管理系统，再见！");
     }
 
+
+    //解析并执行输入的命令
     private void executeCommand(String input) {
+        // 检查输入是否为空或仅包含空白字符
         if (input == null || input.trim().isEmpty()) {
             return;
         }
 
+        // 解析命令行，将输入字符串分割成命令部分数组
         String[] parts = parseCommandLine(input);
+        // 检查解析后的数组是否为空
         if (parts.length == 0) {
             return;
         }
 
+        // 将命令转换为小写，实现大小写不敏感
         String command = parts[0].toLowerCase();
+        // 创建一个新的字符串数组，用于存储命令参数
+        // 数组长度为原始数组长度减1（去掉命令部分）
         String[] args = new String[parts.length - 1];
+        // 使用System.arraycopy方法复制参数
+        // 源数组：parts
+        // 源位置：1（跳过第一个元素，即命令本身）
+        // 目标数组：args
+        // 目标位置：0（从args数组的开始位置填充）
+        // 复制长度：args.length（即parts.length-1）
         System.arraycopy(parts, 1, args, 0, args.length);
 
         try {
@@ -123,13 +139,20 @@ public class CommandParser {
         return input.split("\\s+(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
     }
 
+    //命令实现
     private void handleNewCommand(String[] args) {
+        // 检查参数数量是否足够，至少需要一个参数
         if (args.length < 1) {
+            // 打印错误信息，提示正确的命令用法
             System.err.println("✘ 用法: new <标题> [内容]");
             return;
         }
 
         String title = removeQuotes(args[0]);
+
+// 使用三元运算符判断命令行参数长度是否大于1
+// 如果大于1，则对第二个参数(args[1])执行removeQuotes方法去除引号后赋值给content变量
+// 否则，将content变量初始化为空字符串
         String content = args.length > 1 ? removeQuotes(args[1]) : "";
         noteController.createNote(title, content);
     }

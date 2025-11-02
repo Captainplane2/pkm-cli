@@ -2,10 +2,8 @@ package com.dsq;
 
 import java.util.Objects;
 
-/**
- * 标签类
- * 用于对笔记进行分类和标记
- */
+//标签类，用于对笔记进行分类和标记
+
 public class Tag {
     private Long id;
     private String name;

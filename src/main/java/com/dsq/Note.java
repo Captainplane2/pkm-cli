@@ -10,7 +10,7 @@ import java.util.Objects;
  * 笔记实体类 - 实现序列化支持
  */
 public class Note implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L; //序列化版本号
 
     private String id;
     private String title;
@@ -93,11 +93,20 @@ public class Note implements Serializable {
         return tagList.stream().anyMatch(this::hasTag);
     }
 
+    /**
+     * 重写equals方法，用于比较两个Note对象是否相等
+     * @param o 要比较的对象
+     * @return 如果两个对象相等返回true，否则返回false
+     */
     @Override
     public boolean equals(Object o) {
+        // 如果是同一个对象实例，直接返回true
         if (this == o) return true;
+        // 如果对象为null或两个对象的类不同，返回false
         if (o == null || getClass() != o.getClass()) return false;
+        // 将对象强制转换为Note类型
         Note note = (Note) o;
+        // 比较两个对象的id属性是否相等
         return Objects.equals(id, note.id);
     }
 

@@ -6,6 +6,7 @@ package com.dsq.exception;
 public class PKMException extends Exception {
     private final String errorCode;
 
+    //构造方法
     public PKMException(String errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
