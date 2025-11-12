@@ -2,6 +2,7 @@ package com.dsq.app.cli.command;
 
 import com.dsq.app.controller.NoteController;
 
+@CliCommand({"search", "find"})
 public class SearchCommand extends AbstractCommand {
     private final NoteController noteController;
 

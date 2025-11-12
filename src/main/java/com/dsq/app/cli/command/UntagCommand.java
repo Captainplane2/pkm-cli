@@ -2,6 +2,7 @@ package com.dsq.app.cli.command;
 
 import com.dsq.app.controller.NoteController;
 
+@CliCommand({"untag", "remove-tag"})
 public class UntagCommand extends AbstractCommand {
     private final NoteController noteController;
 

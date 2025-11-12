@@ -2,6 +2,7 @@ package com.dsq.app.cli.command;
 
 import com.dsq.app.controller.NoteController;
 
+@CliCommand({"edit", "update"})
 public class EditCommand extends AbstractCommand {
     private final NoteController noteController;
 

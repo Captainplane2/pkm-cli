@@ -2,16 +2,31 @@ package com.dsq.app.cli.command;
 
 import java.util.Collection;
 
+@CliCommand({"help", "?"})
 public class HelpCommand extends AbstractCommand {
-    private final CommandRegistry commandRegistry;
+    private CommandRegistry commandRegistry;
+
+    public HelpCommand() {
+        super("help", "显示帮助信息");
+    }
 
     public HelpCommand(CommandRegistry commandRegistry) {
         super("help", "显示帮助信息");
         this.commandRegistry = commandRegistry;
     }
 
+    // 设置命令注册器
+    public void setCommandRegistry(CommandRegistry commandRegistry) {
+        this.commandRegistry = commandRegistry;
+    }
+
     @Override
     public void execute(String[] args) {
+        if (commandRegistry == null) {
+            System.err.println("命令注册器未初始化");
+            return;
+        }
+
         System.out.println("个人知识管理系统 - 命令行版本");
         System.out.println("============================= \n");
         System.out.println("可用命令:");
@@ -23,7 +38,6 @@ public class HelpCommand extends AbstractCommand {
 
         System.out.println("\n输入 'help <命令名>' 查看具体命令用法");
 
-        // 如果指定了具体命令，显示详细用法
         if (args.length > 0) {
             String specificCommand = args[0];
             Command cmd = commandRegistry.getCommand(specificCommand);

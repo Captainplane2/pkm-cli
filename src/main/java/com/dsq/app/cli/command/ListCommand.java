@@ -2,6 +2,7 @@ package com.dsq.app.cli.command;
 
 import com.dsq.app.controller.NoteController;
 
+@CliCommand({"list", "ls"})
 public class ListCommand extends AbstractCommand {
     private final NoteController noteController;
 

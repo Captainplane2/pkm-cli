@@ -2,6 +2,7 @@ package com.dsq.app.cli.command;
 
 import com.dsq.app.controller.TagController;
 
+@CliCommand({"tag-search", "search-tag"})
 public class TagSearchCommand extends AbstractCommand {
     private final TagController tagController;
 

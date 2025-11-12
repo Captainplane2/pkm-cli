@@ -2,6 +2,7 @@ package com.dsq.app.cli.command;
 
 import com.dsq.app.controller.NoteController;
 
+@CliCommand({"view", "show"})
 public class ViewCommand extends AbstractCommand {
     private final NoteController noteController;
 

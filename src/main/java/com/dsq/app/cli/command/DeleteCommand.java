@@ -2,6 +2,7 @@ package com.dsq.app.cli.command;
 
 import com.dsq.app.controller.NoteController;
 
+@CliCommand({"delete", "remove", "rm"})
 public class DeleteCommand extends AbstractCommand {
     private final NoteController noteController;
 
