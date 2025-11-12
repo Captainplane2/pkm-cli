@@ -20,6 +20,11 @@ public class HistoryCommand extends AbstractCommand {
         this.commandHistory = commandHistory;
     }
 
+    // 获取历史管理器（供CommandRegistry访问）
+    public CommandHistory getCommandHistory() {
+        return commandHistory;
+    }
+
     @Override
     public void execute(String[] args) {
         if (commandHistory == null) {

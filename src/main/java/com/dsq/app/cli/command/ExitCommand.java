@@ -18,6 +18,11 @@ public class ExitCommand extends AbstractCommand {
         this.exitAction = exitAction;
     }
 
+    // 获取退出动作（供CommandRegistry访问）
+    public Runnable getExitAction() {
+        return exitAction;
+    }
+
     @Override
     public void execute(String[] args) {
         System.out.println("感谢使用个人知识管理系统！");

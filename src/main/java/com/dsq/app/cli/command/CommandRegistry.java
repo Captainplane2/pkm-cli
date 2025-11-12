@@ -171,4 +171,72 @@ public class CommandRegistry {
     public TagController getTagController() {
         return tagController;
     }
+
+    // 在CommandRegistry类中添加以下方法：
+
+    /**
+     * 重新加载所有命令
+     */
+    public void reloadCommands() {
+        System.out.println("重新加载命令...");
+
+        // 保存特殊命令的引用
+        Command oldHelpCommand = commands.get("help");
+        Command oldExitCommand = commands.get("exit");
+        Command oldHistoryCommand = commands.get("history");
+        Command oldReloadCommand = commands.get("reload");
+
+        // 清空当前命令映射
+        commands.clear();
+
+        // 重新扫描和注册命令
+        autoRegisterCommands();
+
+        // 恢复特殊命令的依赖设置
+        setupSpecialCommands(oldHelpCommand, oldExitCommand, oldHistoryCommand, oldReloadCommand);
+
+        System.out.println("命令重新加载完成，当前命令数: " + commands.size());
+    }
+
+    /**
+     * 设置特殊命令的依赖
+     */
+    private void setupSpecialCommands(Command oldHelp, Command oldExit, Command oldHistory, Command oldReload) {
+        // 设置HelpCommand的依赖
+        HelpCommand helpCommand = (HelpCommand) commands.get("help");
+        if (helpCommand != null) {
+            helpCommand.setCommandRegistry(this);
+        }
+
+        // 设置ExitCommand的依赖
+        ExitCommand exitCommand = (ExitCommand) commands.get("exit");
+        if (exitCommand != null && oldExit instanceof ExitCommand) {
+            // 使用原有的退出动作
+            Runnable oldExitAction = ((ExitCommand) oldExit).getExitAction();
+            if (oldExitAction != null) {
+                exitCommand.setExitAction(oldExitAction);
+            }
+        }
+
+        // 设置HistoryCommand的依赖
+        HistoryCommand historyCommand = (HistoryCommand) commands.get("history");
+        if (historyCommand != null && oldHistory instanceof HistoryCommand) {
+            CommandHistory oldCommandHistory = ((HistoryCommand) oldHistory).getCommandHistory();
+            if (oldCommandHistory != null) {
+                historyCommand.setCommandHistory(oldCommandHistory);
+            }
+        }
+
+        // 设置ReloadCommand的依赖
+        ReloadCommand reloadCommand = (ReloadCommand) commands.get("reload");
+        if (reloadCommand != null) {
+            reloadCommand.setCommandRegistry(this);
+        }
+
+        // 设置StatisticsCommand的依赖
+        StatisticsCommand statsCommand = (StatisticsCommand) commands.get("stats");
+        if (statsCommand != null) {
+            statsCommand.setCommandRegistry(this);
+        }
+    }
 }

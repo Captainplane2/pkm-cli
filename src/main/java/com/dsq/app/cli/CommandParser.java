@@ -51,8 +51,21 @@ public class CommandParser {
             historyCommand.setCommandHistory(commandHistory);
         }
 
+        // 设置ReloadCommand的依赖
+        ReloadCommand reloadCommand = (ReloadCommand) commandRegistry.getCommand("reload");
+        if (reloadCommand != null) {
+            reloadCommand.setCommandRegistry(commandRegistry);
+        }
+
+        // 设置StatisticsCommand的依赖
+        StatisticsCommand statsCommand = (StatisticsCommand) commandRegistry.getCommand("stats");
+        if (statsCommand != null) {
+            statsCommand.setCommandRegistry(commandRegistry);
+        }
+
         // 手动注册额外的命令别名（保持向后兼容）
         commandRegistry.registerAlias("h", "help");
+        commandRegistry.registerAlias("perf", "performance");
     }
 
     /**
@@ -159,4 +172,7 @@ public class CommandParser {
             scanner.close();
         }
     }
+
+
+
 }
