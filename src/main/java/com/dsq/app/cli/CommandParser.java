@@ -1,6 +1,10 @@
 package com.dsq.app.cli;
 
-import com.dsq.app.cli.command.*;
+import com.dsq.app.cli.command.core.AbstractCommand;
+import com.dsq.app.cli.command.core.Command;
+import com.dsq.app.cli.command.registry.CommandRegistry;
+import com.dsq.app.cli.command.system.*;
+import com.dsq.app.cli.command.util.CommandHistory;
 
 import java.util.Arrays;
 import java.util.Scanner;
@@ -67,6 +71,7 @@ public class CommandParser {
         commandRegistry.registerAlias("h", "help");
         commandRegistry.registerAlias("perf", "performance");
     }
+
 
     /**
      * 解析命令行参数
@@ -172,7 +177,4 @@ public class CommandParser {
             scanner.close();
         }
     }
-
-
-
 }
