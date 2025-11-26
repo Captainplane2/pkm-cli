@@ -1,0 +1,14 @@
+功能对应关系
+CLI命令           Web API端点                      HTTP方法
+new               /api/notes                       POST
+list              /api/notes                       GET
+view <id>         /api/notes/{id}                  GET
+edit content      /api/notes/{id}/content          PUT
+edit title        /api/notes/{id}/title            PUT
+delete            /api/notes/{id}                  DELETE
+tag add           /api/notes/{id}/tags             POST
+tag remove        /api/notes/{id}/tags/{tag}       DELETE
+search            /api/notes/search?keyword={}     GET
+tags list         /api/tags                        GET
+tags stats        /api/tags/statistics             GET
+tags search       /api/tags/{tag}/notes            GET
