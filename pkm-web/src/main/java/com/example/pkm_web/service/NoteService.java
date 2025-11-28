@@ -1,17 +1,18 @@
 package com.example.pkm_web.service;
 
+import com.example.pkm_web.exception.NotFoundException;
+import com.example.pkm_web.exception.ValidationException;
 import com.example.pkm_web.model.Note;
 import com.example.pkm_web.repository.NoteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
-/**
- * 笔记业务服务 - 封装笔记相关的业务逻辑
- */
 @Service
+@Transactional
 public class NoteService {
 
     private final NoteRepository noteRepository;
@@ -23,7 +24,7 @@ public class NoteService {
 
     public Note createNote(String title, String content) {
         if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("标题不能为空");
+            throw new ValidationException("title", "标题不能为空");
         }
 
         String id = UUID.randomUUID().toString();
@@ -32,15 +33,15 @@ public class NoteService {
     }
 
     public List<Note> getAllNotes() {
-        return noteRepository.findAll();
+        return noteRepository.findAllByOrderByUpdatedAtDesc();
     }
 
     public Note getNoteById(String id) {
         if (id == null || id.trim().isEmpty()) {
-            throw new IllegalArgumentException("笔记ID不能为空");
+            throw new ValidationException("id", "笔记ID不能为空");
         }
         return noteRepository.findById(id.trim())
-                .orElseThrow(() -> new IllegalArgumentException("未找到ID为 " + id + " 的笔记"));
+                .orElseThrow(() -> new NotFoundException("笔记", id));
     }
 
     public Note updateNoteContent(String id, String newContent) {
@@ -51,20 +52,32 @@ public class NoteService {
 
     public Note updateNoteTitle(String id, String newTitle) {
         if (newTitle == null || newTitle.trim().isEmpty()) {
-            throw new IllegalArgumentException("标题不能为空");
+            throw new ValidationException("title", "标题不能为空");
         }
         Note note = getNoteById(id);
         note.setTitle(newTitle.trim());
         return noteRepository.save(note);
     }
 
+    public Note updateNote(Note note) {
+        if (note == null || note.getId() == null) {
+            throw new ValidationException("note", "笔记对象和ID不能为空");
+        }
+        // 确保笔记存在
+        getNoteById(note.getId());
+        return noteRepository.save(note);
+    }
+
     public void deleteNote(String id) {
+        if (!noteRepository.existsById(id)) {
+            throw new NotFoundException("笔记", id);
+        }
         noteRepository.deleteById(id);
     }
 
     public Note addTagToNote(String id, String tag) {
         if (tag == null || tag.trim().isEmpty()) {
-            throw new IllegalArgumentException("标签不能为空");
+            throw new ValidationException("tag", "标签不能为空");
         }
         Note note = getNoteById(id);
         note.addTag(tag.trim());
@@ -82,5 +95,53 @@ public class NoteService {
             return getAllNotes();
         }
         return noteRepository.searchByKeyword(keyword.trim());
+    }
+
+    public List<Note> findNotesByTag(String tag) {
+        if (tag == null || tag.trim().isEmpty()) {
+            return List.of();
+        }
+        return noteRepository.findByTag(tag.trim());
+    }
+
+    public List<Note> findNotesByMultipleTags(List<String> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return List.of();
+        }
+        return noteRepository.findByTagsContainingAll(tags);
+    }
+
+    /**
+     * 获取笔记统计信息
+     */
+    public NoteStatistics getStatistics() {
+        List<Note> allNotes = noteRepository.findAll();
+        long totalNotes = allNotes.size();
+        long totalTags = allNotes.stream()
+                .mapToLong(note -> note.getTags().size())
+                .sum();
+        long averageTagsPerNote = totalNotes > 0 ? totalTags / totalNotes : 0;
+
+        return new NoteStatistics(totalNotes, totalTags, averageTagsPerNote);
+    }
+
+    /**
+     * 笔记统计信息类
+     */
+    public static class NoteStatistics {
+        private final long totalNotes;
+        private final long totalTags;
+        private final long averageTagsPerNote;
+
+        public NoteStatistics(long totalNotes, long totalTags, long averageTagsPerNote) {
+            this.totalNotes = totalNotes;
+            this.totalTags = totalTags;
+            this.averageTagsPerNote = averageTagsPerNote;
+        }
+
+        // Getters
+        public long getTotalNotes() { return totalNotes; }
+        public long getTotalTags() { return totalTags; }
+        public long getAverageTagsPerNote() { return averageTagsPerNote; }
     }
 }

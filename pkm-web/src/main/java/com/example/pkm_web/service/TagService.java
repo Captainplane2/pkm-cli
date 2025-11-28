@@ -1,19 +1,20 @@
 package com.example.pkm_web.service;
 
+import com.example.pkm_web.exception.NotFoundException;
+import com.example.pkm_web.exception.ValidationException;
 import com.example.pkm_web.model.Note;
 import com.example.pkm_web.model.Tag;
 import com.example.pkm_web.repository.NoteRepository;
 import com.example.pkm_web.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * 标签业务服务 - 封装标签相关的业务逻辑
- */
 @Service
+@Transactional
 public class TagService {
 
     private final TagRepository tagRepository;
@@ -29,7 +30,7 @@ public class TagService {
         if (tag == null || tag.trim().isEmpty()) {
             return new ArrayList<>();
         }
-        return noteRepository.findByTagsContaining(tag.trim());
+        return noteRepository.findByTag(tag.trim());
     }
 
     public Set<String> getAllTags() {
@@ -49,18 +50,21 @@ public class TagService {
                 )
         );
 
-        return stats;
+        return stats.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
     }
 
     public List<Note> findNotesByMultipleTags(List<String> tags) {
         if (tags == null || tags.isEmpty()) {
             return new ArrayList<>();
         }
-
-        List<Note> allNotes = noteRepository.findAll();
-        return allNotes.stream()
-                .filter(note -> note.getTags().containsAll(tags))
-                .collect(Collectors.toList());
+        return noteRepository.findByTagsContainingAll(tags);
     }
 
     public List<Note> fuzzySearchByTag(String keyword) {
@@ -79,7 +83,7 @@ public class TagService {
 
     public Tag createTag(String name) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("标签名称不能为空");
+            throw new ValidationException("name", "标签名称不能为空");
         }
 
         String tagName = name.trim();
@@ -89,9 +93,34 @@ public class TagService {
 
     public void deleteTag(String name) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("标签名称不能为空");
+            throw new ValidationException("name", "标签名称不能为空");
         }
 
-        tagRepository.findByName(name.trim()).ifPresent(tagRepository::delete);
+        Tag tag = tagRepository.findByName(name.trim())
+                .orElseThrow(() -> new NotFoundException("标签", name));
+
+        // 从所有笔记中移除该标签
+        List<Note> notesWithTag = noteRepository.findByTag(name.trim());
+        notesWithTag.forEach(note -> note.removeTag(name.trim()));
+        noteRepository.saveAll(notesWithTag);
+
+        tagRepository.delete(tag);
+    }
+
+    public List<Tag> getAllTagEntities() {
+        return tagRepository.findAll();
+    }
+
+    public Optional<Tag> getTagByName(String name) {
+        return tagRepository.findByName(name);
+    }
+
+    public List<String> findPopularTags(int limit) {
+        Map<String, Integer> stats = getTagStatistics();
+        return stats.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .limit(limit)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 }
