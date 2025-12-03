@@ -28,9 +28,9 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
 
     /**
      * 获取最常用的标签（按使用次数排序）
-     */
     @Query("SELECT t FROM Tag t ORDER BY t.usageCount DESC")
     List<Tag> findTopUsedTags();
+     */
 
     /**
      * 获取所有标签名称
