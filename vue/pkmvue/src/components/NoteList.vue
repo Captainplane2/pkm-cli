@@ -1,22 +1,43 @@
 <template>
     <div class="note-list">
       <div class="list-header">
-        <el-input
-          v-model="searchKeyword"
-          placeholder="搜索笔记..."
-          clearable
-          @input="handleSearch"
-          @clear="handleSearchClear"
-        >
-          <template #prefix>
-            <el-icon><Search /></el-icon>
-          </template>
-        </el-input>
-        
-        <el-button type="primary" @click="handleCreateNote" class="create-btn">
-          <el-icon><Plus /></el-icon>
-          新建笔记
-        </el-button>
+        <div class="header-top">
+          <el-input
+            v-model="searchKeyword"
+            placeholder="搜索笔记..."
+            clearable
+            @input="handleSearch"
+            @clear="handleSearchClear"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+          
+          <el-button type="primary" @click="handleCreateNote" class="create-btn">
+            <el-icon><Plus /></el-icon>
+            新建笔记
+          </el-button>
+        </div>
+
+        <div v-if="activeTag" class="active-tag-filter">
+          <span class="filter-label">当前标签筛选：</span>
+          <el-tag
+            type="info"
+            closable
+            @close.stop="handleClearTagFilter"
+          >
+            {{ activeTag }}
+          </el-tag>
+          <el-button
+            text
+            size="small"
+            class="clear-filter-btn"
+            @click="handleClearTagFilter"
+          >
+            清除筛选
+          </el-button>
+        </div>
       </div>
   
       <div class="notes-container">
@@ -81,10 +102,14 @@
     selectedNote: {
       type: Object,
       default: null
+    },
+    activeTag: {
+      type: String,
+      default: ''
     }
   })
   
-  const emit = defineEmits(['select-note', 'create-note', 'edit-note', 'refresh-notes'])
+  const emit = defineEmits(['select-note', 'create-note', 'edit-note', 'refresh-notes', 'clear-tag-filter'])
   
   const searchKeyword = ref('')
   const filteredNotes = computed(() => {
@@ -114,6 +139,10 @@
   
   const handleSearchClear = () => {
     searchKeyword.value = ''
+  }
+
+  const handleClearTagFilter = () => {
+    emit('clear-tag-filter')
   }
   
   const handleNoteCommand = async (note, command) => {
@@ -153,13 +182,33 @@
   .list-header {
     padding: 20px;
     border-bottom: 1px solid #e4e7ed;
+  }
+
+  .header-top {
     display: flex;
     gap: 12px;
     align-items: center;
+    margin-bottom: 8px;
   }
   
   .create-btn {
     flex-shrink: 0;
+  }
+
+  .active-tag-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #606266;
+  }
+
+  .filter-label {
+    white-space: nowrap;
+  }
+
+  .clear-filter-btn {
+    padding: 0 4px;
   }
   
   .notes-container {

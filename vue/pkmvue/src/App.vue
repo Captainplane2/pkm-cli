@@ -8,6 +8,14 @@
             <el-icon class="app-icon"><Notebook /></el-icon>
             PKM 系统
           </h1>
+          <div class="theme-switch">
+            <span class="theme-label">{{ isDark ? '暗色' : '亮色' }}</span>
+            <el-switch
+              v-model="isDark"
+              size="small"
+              @change="handleThemeChange"
+            />
+          </div>
         </div>
         
         <el-menu
@@ -31,12 +39,14 @@
         <!-- 笔记列表区域 -->
         <el-aside v-if="activeMenu === 'notes'" width="360px" class="notes-sidebar">
           <NoteList
-            :notes="notes"
+            :notes="displayNotes"
             :selected-note="selectedNote"
+            :active-tag="activeTag"
             @select-note="handleSelectNote"
             @create-note="handleCreateNote"
             @edit-note="handleEditNote"
             @refresh-notes="loadNotes"
+            @clear-tag-filter="handleClearTagFilter"
           />
         </el-aside>
 
@@ -90,7 +100,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { Notebook, Collection } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import NoteList from './components/NoteList.vue'
@@ -98,23 +108,83 @@ import NoteEditor from './components/NoteEditor.vue'
 import TagManager from './components/TagManager.vue'
 import { noteApi } from './services/api'
 
+const STORAGE_KEY = 'pkm_notes_cache'
+const THEME_KEY = 'pkm_theme'
+
 const activeMenu = ref('notes')
 const notes = ref([])
 const selectedNote = ref(null)
+const activeTag = ref('')
+const isDark = ref(false)
 const showCreateDialog = ref(false)
 const newNoteTitle = ref('')
 const newNoteContent = ref('')
 const creating = ref(false)
 
+const displayNotes = computed(() => {
+  if (!activeTag.value) return notes.value
+  return notes.value.filter(note => Array.isArray(note.tags) && note.tags.includes(activeTag.value))
+})
+
+const saveNotesToLocal = () => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes.value))
+  } catch (e) {
+    console.error('保存到 localStorage 失败', e)
+  }
+}
+
+const loadNotesFromLocal = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const cached = JSON.parse(raw)
+      if (Array.isArray(cached)) {
+        notes.value = cached
+      }
+    }
+  } catch (e) {
+    console.error('从 localStorage 读取失败', e)
+  }
+}
+
 onMounted(() => {
+  // 恢复主题
+  const savedTheme = localStorage.getItem(THEME_KEY)
+  if (savedTheme === 'dark') {
+    isDark.value = true
+    document.body.classList.add('dark')
+  }
+
+  // 先从 localStorage 恢复一份，保证刷新页面数据不丢失
+  loadNotesFromLocal()
+  // 再从后端拉最新数据，更新内存和 localStorage
   loadNotes()
+})
+
+watch(isDark, (val) => {
+  if (val) {
+    document.body.classList.add('dark')
+    localStorage.setItem(THEME_KEY, 'dark')
+  } else {
+    document.body.classList.remove('dark')
+    localStorage.setItem(THEME_KEY, 'light')
+  }
 })
 
 const loadNotes = async () => {
   try {
-    notes.value = await noteApi.getAllNotes()
+    const serverNotes = await noteApi.getAllNotes()
+    notes.value = Array.isArray(serverNotes) ? serverNotes : []
     // 按更新时间倒序排列
     notes.value.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    saveNotesToLocal()
+
+    // 刷新后尽量保留当前选中的笔记
+    if (selectedNote.value) {
+      const currentId = selectedNote.value.id
+      selectedNote.value = notes.value.find(n => n.id === currentId) || null
+    }
   } catch (error) {
     ElMessage.error('加载笔记失败')
   }
@@ -124,6 +194,10 @@ const handleMenuSelect = (index) => {
   activeMenu.value = index
   if (index === 'tags') {
     selectedNote.value = null
+  }
+  if (index === 'notes') {
+    // 返回笔记管理时清除标签筛选，让用户看到全部笔记
+    activeTag.value = ''
   }
 }
 
@@ -166,8 +240,16 @@ const handleEditNote = (note) => {
 const handleTagClick = (tagName) => {
   // 切换到笔记管理并筛选该标签的笔记
   activeMenu.value = 'notes'
-  // 这里可以添加按标签筛选的功能
-  ElMessage.info(`点击了标签: ${tagName}`)
+  activeTag.value = tagName
+  ElMessage.success(`已按标签「${tagName}」筛选笔记`)
+}
+
+const handleClearTagFilter = () => {
+  activeTag.value = ''
+}
+
+const handleThemeChange = () => {
+  // 具体逻辑由 watch(isDark) 统一处理，这里无需额外代码
 }
 </script>
 
@@ -189,6 +271,9 @@ const handleTagClick = (tagName) => {
 .sidebar-header {
   padding: 20px;
   border-bottom: 1px solid #2d3748;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .app-title {
@@ -198,6 +283,18 @@ const handleTagClick = (tagName) => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.theme-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #a0aec0;
+}
+
+.theme-label {
+  white-space: nowrap;
 }
 
 .app-icon {

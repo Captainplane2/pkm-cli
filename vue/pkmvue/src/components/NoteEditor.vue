@@ -61,14 +61,58 @@
         </div>
         
         <div class="editor-content">
-          <el-input
-            v-model="editContent"
-            type="textarea"
-            placeholder="开始编写你的笔记内容..."
-            :autosize="{ minRows: 20, maxRows: 50 }"
-            class="content-textarea"
-            @blur="handleContentSave"
-          />
+          <div class="editor-toolbar">
+            <span class="section-title">内容</span>
+            <div class="toolbar-actions">
+              <el-button
+                size="small"
+                :type="showPreview ? 'default' : 'primary'"
+                @click="showPreview = false"
+              >
+                编辑
+              </el-button>
+              <el-button
+                size="small"
+                :type="showPreview ? 'primary' : 'default'"
+                @click="showPreview = true"
+              >
+                预览 (Markdown)
+              </el-button>
+              <el-dropdown @command="handleExport">
+                <el-button size="small">
+                  导出
+                  <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="md">导出为 Markdown</el-dropdown-item>
+                    <el-dropdown-item command="txt">导出为文本</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
+          </div>
+          <div class="editor-main">
+            <div class="editor-pane">
+              <el-input
+                v-model="editContent"
+                type="textarea"
+                placeholder="开始编写你的笔记内容（支持 Markdown 语法）..."
+                :autosize="{ minRows: 18, maxRows: 50 }"
+                class="content-textarea"
+                @blur="handleContentSave"
+              />
+            </div>
+            <div
+              v-show="showPreview"
+              class="preview-pane"
+            >
+              <div
+                class="markdown-preview"
+                v-html="renderedMarkdown"
+              ></div>
+            </div>
+          </div>
         </div>
         
         <div class="editor-footer">
@@ -86,11 +130,12 @@
   </template>
   
   <script setup>
-  import { ref, watch, nextTick } from 'vue'
-  import { Check, Plus } from '@element-plus/icons-vue'
+  import { ref, watch, nextTick, computed } from 'vue'
+  import { Check, Plus, ArrowDown } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
   import { noteApi } from '../services/api'
   import { formatFullDate } from '../utils/dateUtils'
+  import { marked } from 'marked'
   
   const props = defineProps({
     currentNote: {
@@ -106,6 +151,20 @@
   const saving = ref(false)
   const showTagInput = ref(false)
   const newTag = ref('')
+  const showPreview = ref(false)
+
+  marked.setOptions({
+    breaks: true
+  })
+
+  const renderedMarkdown = computed(() => {
+    if (!editContent.value) return '<p style="color:#909399;">暂无内容</p>'
+    try {
+      return marked.parse(editContent.value)
+    } catch (e) {
+      return '<p style="color:#f56c6c;">Markdown 解析失败</p>'
+    }
+  })
   
   watch(() => props.currentNote, (newNote) => {
     if (newNote) {
@@ -183,12 +242,46 @@
       ElMessage.error('移除标签失败')
     }
   }
+
+  const handleExport = (format) => {
+    if (!props.currentNote) return
+
+    const title = (editTitle.value || props.currentNote.title || '未命名笔记').trim()
+    const content = editContent.value || ''
+
+    let fileName = title.replace(/[\\/:*?"<>|]/g, '_')
+    let data = ''
+
+    if (format === 'md') {
+      fileName = `${fileName || 'note'}.md`
+      data = `# ${title}\n\n${content}`
+    } else {
+      fileName = `${fileName || 'note'}.txt`
+      data = `${title}\n\n${content}`
+    }
+
+    try {
+      const blob = new Blob([data], { type: 'text/plain;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      ElMessage.success('导出成功')
+    } catch (e) {
+      ElMessage.error('导出失败')
+    }
+  }
   </script>
   
   <style scoped>
   .note-editor {
     height: 100%;
     background: white;
+    color: #303133;
   }
   
   .editor-container {
@@ -215,6 +308,8 @@
     border: none;
     padding: 0;
     height: auto;
+    background: transparent;
+    color: #303133;
   }
   
   .title-input :deep(.el-input__inner):focus {
@@ -264,6 +359,27 @@
   .editor-content {
     flex: 1;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .editor-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .editor-main {
+    flex: 1;
+    display: flex;
+    gap: 16px;
   }
   
   .content-textarea :deep(.el-textarea__inner) {
@@ -272,10 +388,61 @@
     font-size: 16px;
     line-height: 1.6;
     padding: 0;
+    background: transparent;
+    color: #303133;
   }
   
   .content-textarea :deep(.el-textarea__inner):focus {
     box-shadow: none;
+  }
+  
+  .content-textarea :deep(.el-textarea__inner)::placeholder {
+    color: #909399;
+  }
+
+  .editor-pane {
+    flex: 1;
+  }
+
+  .preview-pane {
+    flex: 1;
+    border-left: 1px solid #e4e7ed;
+    padding-left: 16px;
+    overflow-y: auto;
+  }
+
+  .markdown-preview {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .markdown-preview h1,
+  .markdown-preview h2,
+  .markdown-preview h3 {
+    margin: 12px 0 8px;
+    font-weight: 600;
+  }
+
+  .markdown-preview p {
+    margin: 6px 0;
+  }
+
+  .markdown-preview ul,
+  .markdown-preview ol {
+    padding-left: 20px;
+    margin: 8px 0;
+  }
+
+  .markdown-preview code {
+    background: #f5f7fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+  }
+
+  .markdown-preview pre code {
+    display: block;
+    padding: 10px;
   }
   
   .editor-footer {

@@ -11,10 +11,193 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f5f7fa;
+  color: #303133;
 }
 
 #app {
   height: 100vh;
+}
+
+/* 暗色主题 */
+body.dark {
+  background-color: #141414;
+  color: #e5e7eb;
+}
+
+body.dark .app-container {
+  background-color: #141414;
+}
+
+body.dark .sidebar {
+  background-color: #000000;
+}
+
+body.dark .notes-sidebar,
+body.dark .main-content,
+body.dark .tag-manager {
+  background-color: #1f2933;
+}
+
+body.dark .note-card {
+  border-bottom-color: #3a3f4b;
+}
+
+body.dark .note-card:hover {
+  background-color: #243447;
+}
+
+body.dark .note-card.active {
+  background-color: #1e3a5f;
+  border-right-color: #409eff;
+}
+
+/* 暗色模式 - 笔记列表文本颜色适配 */
+body.dark .note-title {
+  color: #e5e7eb !important;
+}
+
+body.dark .note-preview {
+  color: #9ca3af !important;
+}
+
+body.dark .note-time {
+  color: #9ca3af !important;
+}
+
+body.dark .more-tags {
+  color: #9ca3af !important;
+}
+
+body.dark .note-list .more-btn {
+  color: #9ca3af !important;
+}
+
+body.dark .note-list .more-btn:hover {
+  background-color: #374151 !important;
+}
+
+body.dark .editor-footer {
+  background-color: #111827;
+  border-top-color: #374151;
+}
+
+body.dark .markdown-preview {
+  background-color: transparent;
+  color: #e5e7eb;
+}
+
+/* 暗色模式 - 笔记编辑器适配 */
+body.dark .note-editor {
+  background-color: #1f2933 !important;
+  color: #e5e7eb !important;
+}
+
+body.dark .editor-header {
+  border-bottom-color: #374151 !important;
+}
+
+body.dark .title-input .el-input__inner {
+  color: #e5e7eb !important;
+  background: transparent !important;
+}
+
+body.dark .title-input .el-input__inner::placeholder {
+  color: #6b7280 !important;
+}
+
+body.dark .section-title {
+  color: #e5e7eb !important;
+}
+
+body.dark .tags-section {
+  border-bottom-color: #374151 !important;
+}
+
+body.dark .no-tags {
+  color: #9ca3af !important;
+}
+
+body.dark .content-textarea .el-textarea__inner {
+  color: #e5e7eb !important;
+  background: transparent !important;
+}
+
+body.dark .content-textarea .el-textarea__inner::placeholder {
+  color: #6b7280 !important;
+}
+
+body.dark .editor-toolbar {
+  color: #e5e7eb !important;
+}
+
+body.dark .preview-pane {
+  border-left-color: #374151 !important;
+}
+
+body.dark .markdown-preview code {
+  background: #374151 !important;
+  color: #e5e7eb !important;
+}
+
+body.dark .markdown-preview pre {
+  background: #374151 !important;
+}
+
+body.dark .markdown-preview pre code {
+  background: transparent !important;
+}
+
+body.dark .empty-editor {
+  background-color: #1f2933 !important;
+}
+
+/* 暗色模式 - 标签管理页适配 */
+body.dark .tag-manager {
+  background-color: #1f2933 !important;
+  color: #e5e7eb !important;
+}
+
+body.dark .manager-header h3 {
+  color: #e5e7eb !important;
+}
+
+body.dark .tag-card {
+  background-color: #111827 !important;
+  border-color: #374151 !important;
+}
+
+body.dark .tag-card:hover {
+  border-color: #409eff !important;
+  background-color: #1e3a5f !important;
+}
+
+body.dark .tag-name {
+  color: #e5e7eb !important;
+}
+
+body.dark .tag-count {
+  color: #9ca3af !important;
+}
+
+body.dark .more-btn {
+  color: #9ca3af !important;
+}
+
+body.dark .more-btn:hover {
+  background-color: #374151 !important;
+}
+
+/* 暗色模式下所有输入框文本颜色适配 */
+body.dark .el-input__inner,
+body.dark .el-textarea__inner {
+  background-color: transparent !important;
+  color: #e5e7eb !important;
+  border-color: #374151 !important;
+}
+
+body.dark .el-input__inner::placeholder,
+body.dark .el-textarea__inner::placeholder {
+  color: #6b7280 !important;
 }
 
 /* 滚动条样式 */
