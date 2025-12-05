@@ -77,4 +77,19 @@ public class NoteController {
         List<Note> notes = noteService.searchNotes(keyword);
         return ResponseEntity.ok(notes);
     }
+
+    @PutMapping("/{id}/category")
+    public ResponseEntity<Note> updateNoteCategory(
+            @PathVariable String id,
+            @RequestBody Map<String, String> request) {
+        String categoryId = request.get("categoryId");
+        Note updatedNote = noteService.updateNoteCategory(id, categoryId);
+        return ResponseEntity.ok(updatedNote);
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<Note>> getNotesByCategory(@PathVariable String categoryId) {
+        List<Note> notes = noteService.findNotesByCategory(categoryId);
+        return ResponseEntity.ok(notes);
+    }
 }

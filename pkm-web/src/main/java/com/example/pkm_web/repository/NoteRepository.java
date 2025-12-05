@@ -46,4 +46,14 @@ public interface NoteRepository extends JpaRepository<Note, String> {
      * 按更新时间倒序排列
      */
     List<Note> findAllByOrderByUpdatedAtDesc();
+
+    /**
+     * 根据分类ID查找笔记
+     */
+    List<Note> findByCategoryId(String categoryId);
+
+    /**
+     * 查找未分类的笔记（categoryId为null）
+     */
+    List<Note> findByCategoryIdIsNull();
 }

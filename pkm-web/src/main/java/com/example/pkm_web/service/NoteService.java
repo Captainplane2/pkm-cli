@@ -111,6 +111,19 @@ public class NoteService {
         return noteRepository.findByTagsContainingAll(tags);
     }
 
+    public Note updateNoteCategory(String id, String categoryId) {
+        Note note = getNoteById(id);
+        note.setCategoryId(categoryId != null && categoryId.trim().isEmpty() ? null : categoryId);
+        return noteRepository.save(note);
+    }
+
+    public List<Note> findNotesByCategory(String categoryId) {
+        if (categoryId == null || categoryId.trim().isEmpty() || "null".equalsIgnoreCase(categoryId.trim())) {
+            return noteRepository.findByCategoryIdIsNull();
+        }
+        return noteRepository.findByCategoryId(categoryId.trim());
+    }
+
     /**
      * 获取笔记统计信息
      */

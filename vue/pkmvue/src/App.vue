@@ -31,6 +31,10 @@
             <el-icon><Collection /></el-icon>
             <span>标签管理</span>
           </el-menu-item>
+          <el-menu-item index="categories">
+            <el-icon><FolderOpened /></el-icon>
+            <span>分类管理</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -42,11 +46,14 @@
             :notes="displayNotes"
             :selected-note="selectedNote"
             :active-tag="activeTag"
+            :active-category-id="activeCategoryId"
+            :categories="categories"
             @select-note="handleSelectNote"
             @create-note="handleCreateNote"
             @edit-note="handleEditNote"
             @refresh-notes="loadNotes"
             @clear-tag-filter="handleClearTagFilter"
+            @clear-category-filter="handleClearCategoryFilter"
           />
         </el-aside>
 
@@ -55,12 +62,17 @@
           <div v-if="activeMenu === 'notes'" class="editor-wrapper">
             <NoteEditor
               :current-note="selectedNote"
+              :categories="categories"
               @refresh-notes="loadNotes"
             />
           </div>
           
           <div v-else-if="activeMenu === 'tags'" class="tag-manager-wrapper">
-            <TagManager @tag-click="handleTagClick" />
+            <TagManager @tag-click="handleTagClick" @refresh-tags="loadTags" />
+          </div>
+          
+          <div v-else-if="activeMenu === 'categories'" class="category-manager-wrapper">
+            <CategoryManager @category-click="handleCategoryClick" @refresh-categories="loadCategories" />
           </div>
         </el-main>
       </el-container>
@@ -101,12 +113,13 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { Notebook, Collection } from '@element-plus/icons-vue'
+import { Notebook, Collection, FolderOpened } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import NoteList from './components/NoteList.vue'
 import NoteEditor from './components/NoteEditor.vue'
 import TagManager from './components/TagManager.vue'
-import { noteApi } from './services/api'
+import CategoryManager from './components/CategoryManager.vue'
+import { noteApi, categoryApi } from './services/api'
 
 const STORAGE_KEY = 'pkm_notes_cache'
 const THEME_KEY = 'pkm_theme'
@@ -115,6 +128,8 @@ const activeMenu = ref('notes')
 const notes = ref([])
 const selectedNote = ref(null)
 const activeTag = ref('')
+const activeCategoryId = ref(null)
+const categories = ref([])
 const isDark = ref(false)
 const showCreateDialog = ref(false)
 const newNoteTitle = ref('')
@@ -122,8 +137,24 @@ const newNoteContent = ref('')
 const creating = ref(false)
 
 const displayNotes = computed(() => {
-  if (!activeTag.value) return notes.value
-  return notes.value.filter(note => Array.isArray(note.tags) && note.tags.includes(activeTag.value))
+  let filtered = notes.value
+  
+  // 先按标签筛选
+  if (activeTag.value) {
+    filtered = filtered.filter(note => Array.isArray(note.tags) && note.tags.includes(activeTag.value))
+  }
+  
+  // 再按分类筛选
+  if (activeCategoryId.value !== null) {
+    if (activeCategoryId.value === null || activeCategoryId.value === '') {
+      // 显示未分类的笔记
+      filtered = filtered.filter(note => !note.categoryId)
+    } else {
+      filtered = filtered.filter(note => note.categoryId === activeCategoryId.value)
+    }
+  }
+  
+  return filtered
 })
 
 const saveNotesToLocal = () => {
@@ -160,7 +191,16 @@ onMounted(() => {
   loadNotesFromLocal()
   // 再从后端拉最新数据，更新内存和 localStorage
   loadNotes()
+  loadCategories()
 })
+
+const loadCategories = async () => {
+  try {
+    categories.value = await categoryApi.getAllCategories()
+  } catch (error) {
+    console.error('加载分类失败', error)
+  }
+}
 
 watch(isDark, (val) => {
   if (val) {
@@ -192,12 +232,13 @@ const loadNotes = async () => {
 
 const handleMenuSelect = (index) => {
   activeMenu.value = index
-  if (index === 'tags') {
+  if (index === 'tags' || index === 'categories') {
     selectedNote.value = null
   }
   if (index === 'notes') {
-    // 返回笔记管理时清除标签筛选，让用户看到全部笔记
+    // 返回笔记管理时清除筛选，让用户看到全部笔记
     activeTag.value = ''
+    activeCategoryId.value = null
   }
 }
 
@@ -246,6 +287,18 @@ const handleTagClick = (tagName) => {
 
 const handleClearTagFilter = () => {
   activeTag.value = ''
+}
+
+const handleClearCategoryFilter = () => {
+  activeCategoryId.value = null
+}
+
+const handleCategoryClick = (categoryId) => {
+  // 切换到笔记管理并筛选该分类的笔记
+  activeMenu.value = 'notes'
+  activeCategoryId.value = categoryId
+  activeTag.value = '' // 清除标签筛选
+  ElMessage.success(categoryId ? `已按分类筛选笔记` : `已显示未分类笔记`)
 }
 
 const handleThemeChange = () => {
@@ -337,7 +390,8 @@ const handleThemeChange = () => {
 }
 
 .editor-wrapper,
-.tag-manager-wrapper {
+.tag-manager-wrapper,
+.category-manager-wrapper {
   height: 100%;
 }
 </style>

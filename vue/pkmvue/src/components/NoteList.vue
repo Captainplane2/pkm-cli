@@ -20,22 +20,35 @@
           </el-button>
         </div>
 
-        <div v-if="activeTag" class="active-tag-filter">
-          <span class="filter-label">当前标签筛选：</span>
-          <el-tag
-            type="info"
-            closable
-            @close.stop="handleClearTagFilter"
-          >
-            {{ activeTag }}
-          </el-tag>
+        <div v-if="activeTag || activeCategoryId !== null" class="active-filters">
+          <div v-if="activeTag" class="active-tag-filter">
+            <span class="filter-label">标签：</span>
+            <el-tag
+              type="info"
+              closable
+              @close.stop="handleClearTagFilter"
+            >
+              {{ activeTag }}
+            </el-tag>
+          </div>
+          <div v-if="activeCategoryId !== null" class="active-category-filter">
+            <span class="filter-label">分类：</span>
+            <el-tag
+              type="warning"
+              closable
+              @close.stop="handleClearCategoryFilter"
+            >
+              {{ getCategoryName(activeCategoryId) }}
+            </el-tag>
+          </div>
           <el-button
+            v-if="activeTag || activeCategoryId !== null"
             text
             size="small"
-            class="clear-filter-btn"
-            @click="handleClearTagFilter"
+            class="clear-all-btn"
+            @click="handleClearAllFilters"
           >
-            清除筛选
+            清除所有筛选
           </el-button>
         </div>
       </div>
@@ -106,10 +119,18 @@
     activeTag: {
       type: String,
       default: ''
+    },
+    activeCategoryId: {
+      type: [String, null],
+      default: null
+    },
+    categories: {
+      type: Array,
+      default: () => []
     }
   })
   
-  const emit = defineEmits(['select-note', 'create-note', 'edit-note', 'refresh-notes', 'clear-tag-filter'])
+  const emit = defineEmits(['select-note', 'create-note', 'edit-note', 'refresh-notes', 'clear-tag-filter', 'clear-category-filter'])
   
   const searchKeyword = ref('')
   const filteredNotes = computed(() => {
@@ -143,6 +164,23 @@
 
   const handleClearTagFilter = () => {
     emit('clear-tag-filter')
+  }
+
+  const handleClearCategoryFilter = () => {
+    emit('clear-category-filter')
+  }
+
+  const handleClearAllFilters = () => {
+    emit('clear-tag-filter')
+    emit('clear-category-filter')
+  }
+
+  const getCategoryName = (categoryId) => {
+    if (categoryId === null || categoryId === '') {
+      return '未分类'
+    }
+    const category = props.categories.find(c => c.id === categoryId)
+    return category ? category.name : '未知分类'
   }
   
   const handleNoteCommand = async (note, command) => {
@@ -195,20 +233,29 @@
     flex-shrink: 0;
   }
 
-  .active-tag-filter {
+  .active-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #606266;
+  }
+
+  .active-tag-filter,
+  .active-category-filter {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
-    color: #606266;
   }
 
   .filter-label {
     white-space: nowrap;
   }
 
-  .clear-filter-btn {
+  .clear-all-btn {
     padding: 0 4px;
+    margin-left: auto;
   }
   
   .notes-container {

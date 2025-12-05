@@ -23,6 +23,30 @@
           </div>
         </div>
         
+        <div class="category-section">
+          <div class="category-header">
+            <span class="section-title">分类</span>
+          </div>
+          <el-select
+            v-model="selectedCategoryId"
+            placeholder="选择分类（可选）"
+            clearable
+            style="width: 100%"
+            @change="handleCategoryChange"
+          >
+            <el-option
+              label="未分类"
+              value=""
+            />
+            <el-option
+              v-for="category in categories"
+              :key="category.id"
+              :label="category.name"
+              :value="category.id"
+            />
+          </el-select>
+        </div>
+        
         <div class="tags-section">
           <div class="tags-header">
             <span class="section-title">标签</span>
@@ -141,6 +165,10 @@
     currentNote: {
       type: Object,
       default: null
+    },
+    categories: {
+      type: Array,
+      default: () => []
     }
   })
   
@@ -152,6 +180,7 @@
   const showTagInput = ref(false)
   const newTag = ref('')
   const showPreview = ref(false)
+  const selectedCategoryId = ref('')
 
   marked.setOptions({
     breaks: true
@@ -170,6 +199,7 @@
     if (newNote) {
       editTitle.value = newNote.title || ''
       editContent.value = newNote.content || ''
+      selectedCategoryId.value = newNote.categoryId || ''
       showTagInput.value = false
       newTag.value = ''
     }
@@ -240,6 +270,18 @@
       emit('refresh-notes')
     } catch (error) {
       ElMessage.error('移除标签失败')
+    }
+  }
+
+  const handleCategoryChange = async (categoryId) => {
+    if (!props.currentNote) return
+    
+    try {
+      await noteApi.updateNoteCategory(props.currentNote.id, categoryId || null)
+      ElMessage.success('分类已更新')
+      emit('refresh-notes')
+    } catch (error) {
+      ElMessage.error('更新分类失败')
     }
   }
 
@@ -320,6 +362,15 @@
     flex-shrink: 0;
   }
   
+  .category-section {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .category-header {
+    margin-bottom: 12px;
+  }
+
   .tags-section {
     padding: 16px 20px;
     border-bottom: 1px solid #f0f0f0;

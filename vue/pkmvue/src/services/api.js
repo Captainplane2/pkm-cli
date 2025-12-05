@@ -59,7 +59,17 @@ export const noteApi = {
   addTag: (id, tag) => api.post(`/notes/${id}/tags`, { tag }),
   
   // 移除标签
-  removeTag: (id, tag) => api.delete(`/notes/${id}/tags/${tag}`)
+  removeTag: (id, tag) => api.delete(`/notes/${id}/tags/${tag}`),
+  
+  // 更新笔记分类
+  updateNoteCategory: (id, categoryId) => api.put(`/notes/${id}/category`, { categoryId }),
+  
+  // 按分类获取笔记
+  getNotesByCategory: (categoryId) => {
+    // 如果 categoryId 为 null 或空字符串，使用 'null' 作为路径参数
+    const pathParam = categoryId === null || categoryId === '' ? 'null' : categoryId
+    return api.get(`/notes/category/${pathParam}`)
+  }
 }
 
 // 标签相关API
@@ -78,6 +88,31 @@ export const tagApi = {
   
   // 删除标签
   deleteTag: (name) => api.delete(`/tags/${name}`)
+}
+
+// 分类相关API
+export const categoryApi = {
+  // 获取所有分类
+  getAllCategories: () => api.get('/categories'),
+  
+  // 获取单个分类
+  getCategoryById: (id) => api.get(`/categories/${id}`),
+  
+  // 创建分类
+  createCategory: (name, description) => api.post('/categories', { name, description }),
+  
+  // 更新分类
+  updateCategory: (id, name, description) => api.put(`/categories/${id}`, { name, description }),
+  
+  // 删除分类
+  deleteCategory: (id) => api.delete(`/categories/${id}`),
+  
+  // 获取分类下的笔记数量
+  getNoteCount: (id) => {
+    // 如果id为null或空字符串，使用'null'作为路径参数
+    const pathParam = id === null || id === '' ? 'null' : id;
+    return api.get(`/categories/${pathParam}/count`);
+  },
 }
 
 export default api

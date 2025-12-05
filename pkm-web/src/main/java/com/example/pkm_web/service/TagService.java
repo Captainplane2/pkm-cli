@@ -44,10 +44,17 @@ public class TagService {
         List<Note> allNotes = noteRepository.findAll();
         Map<String, Integer> stats = new HashMap<>();
 
+        // 先统计所有笔记中使用的标签
         allNotes.forEach(note ->
                 note.getTags().forEach(tag ->
                         stats.put(tag, stats.getOrDefault(tag, 0) + 1)
                 )
+        );
+
+        // 然后添加所有已创建但未使用的标签
+        List<String> allTagNames = tagRepository.findAllTagNames();
+        allTagNames.forEach(tagName ->
+                stats.putIfAbsent(tagName, 0)
         );
 
         return stats.entrySet().stream()

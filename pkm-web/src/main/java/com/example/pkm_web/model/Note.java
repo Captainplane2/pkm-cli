@@ -29,6 +29,9 @@ public class Note implements Serializable {
     @Column(name = "tag")
     private List<String> tags = new ArrayList<>();
 
+    @Column(name = "category_id")
+    private String categoryId;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -72,6 +75,15 @@ public class Note implements Serializable {
     public List<String> getTags() { return new ArrayList<>(tags); }
     public void setTags(List<String> tags) {
         this.tags = new ArrayList<>(tags != null ? tags : new ArrayList<>());
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
         this.updatedAt = LocalDateTime.now();
     }
 
