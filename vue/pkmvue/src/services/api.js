@@ -28,6 +28,24 @@ api.interceptors.response.use(
   },
   error => {
     console.error('API Error:', error)
+    // 解析后端返回的错误响应
+    let errorMessage = '操作失败，请稍后重试'
+    if (error.response && error.response.data) {
+      const errorData = error.response.data
+      // 检查是否是后端统一的错误响应格式
+      if (errorData.errorCode && errorData.message) {
+        errorMessage = errorData.message
+        // 将完整的错误信息附加到error对象上，方便组件使用
+        error.errorResponse = errorData
+      } else {
+        errorMessage = errorData.message || errorData.error || '操作失败'
+      }
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+    
+    // 将处理后的错误信息添加到error对象
+    error.handledMessage = errorMessage
     return Promise.reject(error)
   }
 )

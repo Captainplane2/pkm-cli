@@ -40,7 +40,7 @@
           </div>
         </div>
         <el-dropdown @command="handleCategoryCommand(category, $event)" trigger="click">
-          <el-icon class="more-btn"><MoreFilled /></el-icon>
+          <el-icon class="more-btn" @click.stop><MoreFilled /></el-icon>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="edit">编辑</el-dropdown-item>
@@ -163,8 +163,7 @@ const loadCategories = async () => {
     categories.value = categoriesWithCount
   } catch (error) {
     console.error('加载分类失败:', error)
-    const errorMsg = error.response?.data?.message || error.message || '加载分类失败'
-    ElMessage.error(errorMsg)
+    ElMessage.error(error.handledMessage || '加载分类失败')
   }
 }
 
@@ -212,7 +211,7 @@ const handleCategoryCommand = async (category, command) => {
       }
     } catch (error) {
       if (error !== 'cancel') {
-        ElMessage.error('删除分类失败')
+        ElMessage.error(error.handledMessage || '删除分类失败')
       }
     }
   }
@@ -238,8 +237,7 @@ const handleCreateCategory = async () => {
     emit('refresh-categories')
   } catch (error) {
     console.error('创建分类失败:', error)
-    const errorMsg = error.response?.data?.message || error.message || '创建分类失败'
-    ElMessage.error(errorMsg)
+    ElMessage.error(error.handledMessage || '创建分类失败')
   } finally {
     creating.value = false
   }
@@ -264,8 +262,7 @@ const handleUpdateCategory = async () => {
     emit('refresh-categories')
   } catch (error) {
     console.error('更新分类失败:', error)
-    const errorMsg = error.response?.data?.message || error.message || '更新分类失败'
-    ElMessage.error(errorMsg)
+    ElMessage.error(error.handledMessage || '更新分类失败')
   } finally {
     updating.value = false
   }
@@ -406,4 +403,3 @@ const handleUpdateCategory = async () => {
   background-color: #374151;
 }
 </style>
-

@@ -268,7 +268,7 @@ const handleCreateNoteConfirm = async () => {
     showCreateDialog.value = false
     loadNotes()
   } catch (error) {
-    ElMessage.error('创建笔记失败')
+    ElMessage.error('创建笔记失败：' + (error.handledMessage || '未知错误'))
   } finally {
     creating.value = false
   }

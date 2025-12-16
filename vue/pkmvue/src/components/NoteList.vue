@@ -203,7 +203,7 @@
         emit('refresh-notes')
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
+          ElMessage.error(error.handledMessage || '删除失败')
         }
       }
     }

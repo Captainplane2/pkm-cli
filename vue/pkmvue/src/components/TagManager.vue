@@ -18,7 +18,7 @@
           <div class="tag-header">
             <span class="tag-name">{{ tag.name }}</span>
             <el-dropdown @command="handleTagCommand(tag.name, $event)" trigger="click">
-              <el-icon class="more-btn"><MoreFilled /></el-icon>
+              <el-icon class="more-btn" @click.stop><MoreFilled /></el-icon>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="delete" style="color: #f56c6c;">删除</el-dropdown-item>
@@ -85,7 +85,7 @@
         count
       })).sort((a, b) => b.count - a.count)
     } catch (error) {
-      ElMessage.error('加载标签统计失败')
+      ElMessage.error(error.handledMessage || '加载标签统计失败')
     }
   }
   
@@ -111,7 +111,7 @@
         loadTagStatistics()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除标签失败')
+          ElMessage.error(error.handledMessage || '删除标签失败')
         }
       }
     }
@@ -131,7 +131,7 @@
       newTagName.value = ''
       loadTagStatistics()
     } catch (error) {
-      ElMessage.error('创建标签失败')
+      ElMessage.error(error.handledMessage || '创建标签失败')
     } finally {
       creating.value = false
     }

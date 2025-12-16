@@ -213,7 +213,8 @@
       ElMessage.success('标题已保存')
       emit('refresh-notes')
     } catch (error) {
-      ElMessage.error('保存标题失败')
+      // 使用后端返回的错误信息或默认信息
+      ElMessage.error(error.handledMessage || '保存标题失败')
     }
   }
   
@@ -225,7 +226,8 @@
       ElMessage.success('内容已保存')
       emit('refresh-notes')
     } catch (error) {
-      ElMessage.error('保存内容失败')
+      // 使用后端返回的错误信息或默认信息
+      ElMessage.error(error.handledMessage || '保存内容失败')
     }
   }
   
@@ -241,7 +243,8 @@
       ElMessage.success('笔记已保存')
       emit('refresh-notes')
     } catch (error) {
-      ElMessage.error('保存失败')
+      // 使用后端返回的错误信息或默认信息
+      ElMessage.error(error.handledMessage || '保存失败')
     } finally {
       saving.value = false
     }
@@ -257,7 +260,8 @@
       showTagInput.value = false
       emit('refresh-notes')
     } catch (error) {
-      ElMessage.error('添加标签失败')
+      // 使用后端返回的错误信息或默认信息
+      ElMessage.error(error.handledMessage || '添加标签失败')
     }
   }
   
@@ -269,7 +273,8 @@
       ElMessage.success('标签已移除')
       emit('refresh-notes')
     } catch (error) {
-      ElMessage.error('移除标签失败')
+      // 使用后端返回的错误信息或默认信息
+      ElMessage.error(error.handledMessage || '移除标签失败')
     }
   }
 
@@ -281,7 +286,8 @@
       ElMessage.success('分类已更新')
       emit('refresh-notes')
     } catch (error) {
-      ElMessage.error('更新分类失败')
+      // 使用后端返回的错误信息或默认信息
+      ElMessage.error(error.handledMessage || '更新分类失败')
     }
   }
 

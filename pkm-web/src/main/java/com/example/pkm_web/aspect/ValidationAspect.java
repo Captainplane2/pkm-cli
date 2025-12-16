@@ -94,12 +94,37 @@ public class ValidationAspect {
     private void validateNotEmpty(Object arg, String paramName) {
         if (arg == null) {
             log.error("参数 {} 不能为空", paramName);
-            throw new ValidationException(paramName, "参数不能为空");
+            // 根据参数名生成更友好的错误信息
+            String friendlyMessage = getFriendlyMessage(paramName, "不能为空");
+            throw new ValidationException(paramName, friendlyMessage);
         }
         
         if (arg instanceof String && ((String) arg).trim().isEmpty()) {
             log.error("参数 {} 不能为空字符串", paramName);
-            throw new ValidationException(paramName, "参数不能为空字符串");
+            // 根据参数名生成更友好的错误信息
+            String friendlyMessage = getFriendlyMessage(paramName, "不能为空");
+            throw new ValidationException(paramName, friendlyMessage);
+        }
+    }
+    
+    /**
+     * 根据参数名生成更友好的错误信息
+     */
+    private String getFriendlyMessage(String paramName, String reason) {
+        // 针对不同的参数名生成更具体的错误信息
+        switch (paramName) {
+            case "title":
+                return "笔记标题不能为空";
+            case "content":
+                return "笔记内容不能为空";
+            case "id":
+                return "笔记ID不能为空";
+            case "tag":
+                return "标签名称不能为空";
+            case "categoryId":
+                return "分类ID不能为空";
+            default:
+                return "参数" + paramName + reason;
         }
     }
 
