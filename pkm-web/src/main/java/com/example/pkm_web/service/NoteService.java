@@ -1,5 +1,10 @@
 package com.example.pkm_web.service;
 
+import com.example.pkm_web.annotation.CacheEvict;
+import com.example.pkm_web.annotation.Cacheable;
+import com.example.pkm_web.annotation.OperationLog;
+import com.example.pkm_web.annotation.PerformanceMonitor;
+import com.example.pkm_web.annotation.Validation;
 import com.example.pkm_web.exception.NotFoundException;
 import com.example.pkm_web.exception.ValidationException;
 import com.example.pkm_web.model.Note;
@@ -22,52 +27,66 @@ public class NoteService {
         this.noteRepository = noteRepository;
     }
 
+    @OperationLog(value = "创建新笔记", type = OperationLog.OperationType.CREATE)
+    @PerformanceMonitor(value = "创建新笔记", threshold = 500)
+    @CacheEvict(allEntries = true)
+    @Validation
     public Note createNote(String title, String content) {
-        if (title == null || title.trim().isEmpty()) {
-            throw new ValidationException("title", "标题不能为空");
-        }
-
         String id = UUID.randomUUID().toString();
         Note note = new Note(id, title.trim(), content != null ? content.trim() : "");
         return noteRepository.save(note);
     }
 
+    @OperationLog(value = "获取所有笔记", type = OperationLog.OperationType.QUERY)
+    @PerformanceMonitor(value = "获取所有笔记", threshold = 1000, recordParams = false)
+    @Cacheable(key = "'all_notes'")
     public List<Note> getAllNotes() {
         return noteRepository.findAllByOrderByUpdatedAtDesc();
     }
 
+    @OperationLog(value = "根据ID获取笔记", type = OperationLog.OperationType.QUERY)
+    @PerformanceMonitor(value = "根据ID获取笔记", threshold = 300)
+    @Cacheable(key = "'note_' + #id")
+    @Validation
     public Note getNoteById(String id) {
-        if (id == null || id.trim().isEmpty()) {
-            throw new ValidationException("id", "笔记ID不能为空");
-        }
         return noteRepository.findById(id.trim())
                 .orElseThrow(() -> new NotFoundException("笔记", id));
     }
 
+    @OperationLog(value = "更新笔记内容", type = OperationLog.OperationType.UPDATE)
+    @PerformanceMonitor(value = "更新笔记内容", threshold = 500)
+    @CacheEvict(allEntries = true)
+    @Validation
     public Note updateNoteContent(String id, String newContent) {
         Note note = getNoteById(id);
         note.setContent(newContent != null ? newContent.trim() : "");
         return noteRepository.save(note);
     }
 
+    @OperationLog(value = "更新笔记标题", type = OperationLog.OperationType.UPDATE)
+    @PerformanceMonitor(value = "更新笔记标题", threshold = 500)
+    @CacheEvict(allEntries = true)
+    @Validation
     public Note updateNoteTitle(String id, String newTitle) {
-        if (newTitle == null || newTitle.trim().isEmpty()) {
-            throw new ValidationException("title", "标题不能为空");
-        }
         Note note = getNoteById(id);
         note.setTitle(newTitle.trim());
         return noteRepository.save(note);
     }
 
+    @OperationLog(value = "更新笔记", type = OperationLog.OperationType.UPDATE)
+    @PerformanceMonitor(value = "更新笔记", threshold = 500)
+    @CacheEvict(allEntries = true)
+    @Validation
     public Note updateNote(Note note) {
-        if (note == null || note.getId() == null) {
-            throw new ValidationException("note", "笔记对象和ID不能为空");
-        }
         // 确保笔记存在
         getNoteById(note.getId());
         return noteRepository.save(note);
     }
 
+    @OperationLog(value = "删除笔记", type = OperationLog.OperationType.DELETE)
+    @PerformanceMonitor(value = "删除笔记", threshold = 500)
+    @CacheEvict(allEntries = true)
+    @Validation
     public void deleteNote(String id) {
         if (!noteRepository.existsById(id)) {
             throw new NotFoundException("笔记", id);
@@ -75,21 +94,29 @@ public class NoteService {
         noteRepository.deleteById(id);
     }
 
+    @OperationLog(value = "为笔记添加标签", type = OperationLog.OperationType.UPDATE)
+    @PerformanceMonitor(value = "为笔记添加标签", threshold = 500)
+    @CacheEvict(allEntries = true)
+    @Validation
     public Note addTagToNote(String id, String tag) {
-        if (tag == null || tag.trim().isEmpty()) {
-            throw new ValidationException("tag", "标签不能为空");
-        }
         Note note = getNoteById(id);
         note.addTag(tag.trim());
         return noteRepository.save(note);
     }
 
+    @OperationLog(value = "从笔记移除标签", type = OperationLog.OperationType.UPDATE)
+    @PerformanceMonitor(value = "从笔记移除标签", threshold = 500)
+    @CacheEvict(allEntries = true)
+    @Validation
     public Note removeTagFromNote(String id, String tag) {
         Note note = getNoteById(id);
         note.removeTag(tag);
         return noteRepository.save(note);
     }
 
+    @OperationLog(value = "搜索笔记", type = OperationLog.OperationType.QUERY)
+    @PerformanceMonitor(value = "搜索笔记", threshold = 1000, recordResult = false)
+    @Cacheable(key = "'search_' + #keyword")
     public List<Note> searchNotes(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return getAllNotes();
@@ -97,6 +124,9 @@ public class NoteService {
         return noteRepository.searchByKeyword(keyword.trim());
     }
 
+    @OperationLog(value = "根据标签查找笔记", type = OperationLog.OperationType.QUERY)
+    @PerformanceMonitor(value = "根据标签查找笔记", threshold = 800)
+    @Cacheable(key = "'notes_by_tag_' + #tag")
     public List<Note> findNotesByTag(String tag) {
         if (tag == null || tag.trim().isEmpty()) {
             return List.of();
@@ -104,6 +134,9 @@ public class NoteService {
         return noteRepository.findByTag(tag.trim());
     }
 
+    @OperationLog(value = "根据多个标签查找笔记", type = OperationLog.OperationType.QUERY)
+    @PerformanceMonitor(value = "根据多个标签查找笔记", threshold = 1500, recordResult = false)
+    @Cacheable(key = "'notes_by_tags_' + #tags")
     public List<Note> findNotesByMultipleTags(List<String> tags) {
         if (tags == null || tags.isEmpty()) {
             return List.of();
@@ -111,12 +144,19 @@ public class NoteService {
         return noteRepository.findByTagsContainingAll(tags);
     }
 
+    @OperationLog(value = "更新笔记分类", type = OperationLog.OperationType.UPDATE)
+    @PerformanceMonitor(value = "更新笔记分类", threshold = 500)
+    @CacheEvict(allEntries = true)
+    @Validation
     public Note updateNoteCategory(String id, String categoryId) {
         Note note = getNoteById(id);
         note.setCategoryId(categoryId != null && categoryId.trim().isEmpty() ? null : categoryId);
         return noteRepository.save(note);
     }
 
+    @OperationLog(value = "根据分类查找笔记", type = OperationLog.OperationType.QUERY)
+    @PerformanceMonitor(value = "根据分类查找笔记", threshold = 800)
+    @Cacheable(key = "'notes_by_category_' + #categoryId")
     public List<Note> findNotesByCategory(String categoryId) {
         if (categoryId == null || categoryId.trim().isEmpty() || "null".equalsIgnoreCase(categoryId.trim())) {
             return noteRepository.findByCategoryIdIsNull();
@@ -127,6 +167,9 @@ public class NoteService {
     /**
      * 获取笔记统计信息
      */
+    @OperationLog(value = "获取笔记统计信息", type = OperationLog.OperationType.QUERY)
+    @PerformanceMonitor(value = "获取笔记统计信息", threshold = 1000, recordResult = true)
+    @Cacheable(key = "'note_statistics'", ttl = 600) // 统计信息缓存10分钟
     public NoteStatistics getStatistics() {
         List<Note> allNotes = noteRepository.findAll();
         long totalNotes = allNotes.size();

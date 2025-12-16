@@ -1,5 +1,7 @@
 package com.example.pkm_web.service;
 
+import com.example.pkm_web.annotation.OperationLog;
+import com.example.pkm_web.annotation.PerformanceMonitor;
 import com.example.pkm_web.exception.NotFoundException;
 import com.example.pkm_web.exception.ValidationException;
 import com.example.pkm_web.model.Category;
@@ -25,6 +27,8 @@ public class CategoryService {
         this.noteRepository = noteRepository;
     }
 
+    @OperationLog(value = "创建分类", type = OperationLog.OperationType.CREATE)
+    @PerformanceMonitor(value = "创建分类", threshold = 500)
     public Category createCategory(String name, String description) {
         if (name == null || name.trim().isEmpty()) {
             throw new ValidationException("name", "分类名称不能为空");
@@ -48,10 +52,14 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
+    @OperationLog(value = "获取所有分类", type = OperationLog.OperationType.QUERY)
+    @PerformanceMonitor(value = "获取所有分类", threshold = 800, recordParams = false)
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
     }
 
+    @OperationLog(value = "根据ID获取分类", type = OperationLog.OperationType.QUERY)
+    @PerformanceMonitor(value = "根据ID获取分类", threshold = 300)
     public Category getCategoryById(String id) {
         if (id == null || id.trim().isEmpty()) {
             throw new ValidationException("id", "分类ID不能为空");
@@ -60,6 +68,8 @@ public class CategoryService {
                 .orElseThrow(() -> new NotFoundException("分类", id));
     }
 
+    @OperationLog(value = "更新分类", type = OperationLog.OperationType.UPDATE)
+    @PerformanceMonitor(value = "更新分类", threshold = 500)
     public Category updateCategory(String id, String name, String description) {
         Category category = getCategoryById(id);
 
@@ -79,6 +89,8 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
+    @OperationLog(value = "删除分类", type = OperationLog.OperationType.DELETE)
+    @PerformanceMonitor(value = "删除分类", threshold = 2000, recordResult = false)
     public void deleteCategory(String id) {
         Category category = getCategoryById(id);
         
@@ -93,6 +105,8 @@ public class CategoryService {
         categoryRepository.delete(category);
     }
 
+    @OperationLog(value = "根据分类获取笔记数量", type = OperationLog.OperationType.QUERY)
+    @PerformanceMonitor(value = "根据分类获取笔记数量", threshold = 1000)
     public long getNoteCountByCategory(String categoryId) {
         if (categoryId == null || categoryId.trim().isEmpty() || "null".equalsIgnoreCase(categoryId.trim())) {
             return noteRepository.findByCategoryIdIsNull().size();
@@ -100,4 +114,3 @@ public class CategoryService {
         return noteRepository.findByCategoryId(categoryId.trim()).size();
     }
 }
-
