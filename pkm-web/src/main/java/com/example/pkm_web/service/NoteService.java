@@ -9,11 +9,13 @@ import com.example.pkm_web.exception.NotFoundException;
 import com.example.pkm_web.exception.ValidationException;
 import com.example.pkm_web.model.Note;
 import com.example.pkm_web.repository.NoteRepository;
+import com.example.pkm_web.util.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -33,23 +35,26 @@ public class NoteService {
     @Validation
     public Note createNote(String title, String content) {
         String id = UUID.randomUUID().toString();
-        Note note = new Note(id, title.trim(), content != null ? content.trim() : "");
+        Long currentUserId = UserContext.getCurrentUserId();
+        Note note = new Note(id, title.trim(), content != null ? content.trim() : "", currentUserId);
         return noteRepository.save(note);
     }
 
     @OperationLog(value = "获取所有笔记", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "获取所有笔记", threshold = 1000, recordParams = false)
-    @Cacheable(key = "'all_notes'")
+    @Cacheable(key = "'all_notes_' + T(com.example.pkm_web.util.UserContext).getCurrentUserId()")
     public List<Note> getAllNotes() {
-        return noteRepository.findAllByOrderByUpdatedAtDesc();
+        Long currentUserId = UserContext.getCurrentUserId();
+        return noteRepository.findAllByUserIdOrderByUpdatedAtDesc(currentUserId);
     }
 
     @OperationLog(value = "根据ID获取笔记", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "根据ID获取笔记", threshold = 300)
-    @Cacheable(key = "'note_' + #id")
+    @Cacheable(key = "'note_' + #id + '_' + T(com.example.pkm_web.util.UserContext).getCurrentUserId()")
     @Validation
     public Note getNoteById(String id) {
-        return noteRepository.findById(id.trim())
+        Long currentUserId = UserContext.getCurrentUserId();
+        return noteRepository.findByIdAndUserId(id.trim(), currentUserId)
                 .orElseThrow(() -> new NotFoundException("笔记", id));
     }
 
@@ -80,6 +85,9 @@ public class NoteService {
     public Note updateNote(Note note) {
         // 确保笔记存在
         getNoteById(note.getId());
+        // 确保更新时不会改变用户ID
+        Long currentUserId = UserContext.getCurrentUserId();
+        note.setUserId(currentUserId);
         return noteRepository.save(note);
     }
 
@@ -88,7 +96,9 @@ public class NoteService {
     @CacheEvict(allEntries = true)
     @Validation
     public void deleteNote(String id) {
-        if (!noteRepository.existsById(id)) {
+        Long currentUserId = UserContext.getCurrentUserId();
+        // 确保只能删除自己的笔记
+        if (!noteRepository.existsByIdAndUserId(id, currentUserId)) {
             throw new NotFoundException("笔记", id);
         }
         noteRepository.deleteById(id);
@@ -116,32 +126,35 @@ public class NoteService {
 
     @OperationLog(value = "搜索笔记", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "搜索笔记", threshold = 1000, recordResult = false)
-    @Cacheable(key = "'search_' + #keyword")
+    @Cacheable(key = "'search_' + #keyword + '_' + T(com.example.pkm_web.util.UserContext).getCurrentUserId()")
     public List<Note> searchNotes(String keyword) {
+        Long currentUserId = UserContext.getCurrentUserId();
         if (keyword == null || keyword.trim().isEmpty()) {
             return getAllNotes();
         }
-        return noteRepository.searchByKeyword(keyword.trim());
+        return noteRepository.searchByKeywordAndUserId(keyword.trim(), currentUserId);
     }
 
     @OperationLog(value = "根据标签查找笔记", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "根据标签查找笔记", threshold = 800)
-    @Cacheable(key = "'notes_by_tag_' + #tag")
+    @Cacheable(key = "'notes_by_tag_' + #tag + '_' + T(com.example.pkm_web.util.UserContext).getCurrentUserId()")
     public List<Note> findNotesByTag(String tag) {
+        Long currentUserId = UserContext.getCurrentUserId();
         if (tag == null || tag.trim().isEmpty()) {
             return List.of();
         }
-        return noteRepository.findByTag(tag.trim());
+        return noteRepository.findByTagAndUserId(tag.trim(), currentUserId);
     }
 
     @OperationLog(value = "根据多个标签查找笔记", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "根据多个标签查找笔记", threshold = 1500, recordResult = false)
-    @Cacheable(key = "'notes_by_tags_' + #tags")
+    @Cacheable(key = "'notes_by_tags_' + #tags + '_' + T(com.example.pkm_web.util.UserContext).getCurrentUserId()")
     public List<Note> findNotesByMultipleTags(List<String> tags) {
+        Long currentUserId = UserContext.getCurrentUserId();
         if (tags == null || tags.isEmpty()) {
             return List.of();
         }
-        return noteRepository.findByTagsContainingAll(tags);
+        return noteRepository.findByTagsContainingAllAndUserId(tags, currentUserId);
     }
 
     @OperationLog(value = "更新笔记分类", type = OperationLog.OperationType.UPDATE)
@@ -156,12 +169,13 @@ public class NoteService {
 
     @OperationLog(value = "根据分类查找笔记", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "根据分类查找笔记", threshold = 800)
-    @Cacheable(key = "'notes_by_category_' + #categoryId")
+    @Cacheable(key = "'notes_by_category_' + #categoryId + '_' + T(com.example.pkm_web.util.UserContext).getCurrentUserId()")
     public List<Note> findNotesByCategory(String categoryId) {
+        Long currentUserId = UserContext.getCurrentUserId();
         if (categoryId == null || categoryId.trim().isEmpty() || "null".equalsIgnoreCase(categoryId.trim())) {
-            return noteRepository.findByCategoryIdIsNull();
+            return noteRepository.findByCategoryIdIsNullAndUserId(currentUserId);
         }
-        return noteRepository.findByCategoryId(categoryId.trim());
+        return noteRepository.findByCategoryIdAndUserId(categoryId.trim(), currentUserId);
     }
 
     /**
@@ -169,9 +183,10 @@ public class NoteService {
      */
     @OperationLog(value = "获取笔记统计信息", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "获取笔记统计信息", threshold = 1000, recordResult = true)
-    @Cacheable(key = "'note_statistics'", ttl = 600) // 统计信息缓存10分钟
+    @Cacheable(key = "'note_statistics_' + T(com.example.pkm_web.util.UserContext).getCurrentUserId()", ttl = 600) // 统计信息缓存10分钟
     public NoteStatistics getStatistics() {
-        List<Note> allNotes = noteRepository.findAll();
+        Long currentUserId = UserContext.getCurrentUserId();
+        List<Note> allNotes = noteRepository.findByUserId(currentUserId);
         long totalNotes = allNotes.size();
         long totalTags = allNotes.stream()
                 .mapToLong(note -> note.getTags().size())

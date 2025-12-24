@@ -8,6 +8,7 @@ import com.example.pkm_web.model.Note;
 import com.example.pkm_web.model.Tag;
 import com.example.pkm_web.repository.NoteRepository;
 import com.example.pkm_web.repository.TagRepository;
+import com.example.pkm_web.util.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,13 +35,15 @@ public class TagService {
         if (tag == null || tag.trim().isEmpty()) {
             return new ArrayList<>();
         }
-        return noteRepository.findByTag(tag.trim());
+        Long currentUserId = UserContext.getCurrentUserId();
+        return noteRepository.findByTagAndUserId(tag.trim(), currentUserId);
     }
 
     @OperationLog(value = "获取所有标签", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "获取所有标签", threshold = 1000, recordParams = false)
     public Set<String> getAllTags() {
-        List<Note> allNotes = noteRepository.findAll();
+        Long currentUserId = UserContext.getCurrentUserId();
+        List<Note> allNotes = noteRepository.findByUserId(currentUserId);
         return allNotes.stream()
                 .flatMap(note -> note.getTags().stream())
                 .collect(Collectors.toSet());
@@ -49,7 +52,8 @@ public class TagService {
     @OperationLog(value = "获取标签统计信息", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "获取标签统计信息", threshold = 1500, recordResult = true)
     public Map<String, Integer> getTagStatistics() {
-        List<Note> allNotes = noteRepository.findAll();
+        Long currentUserId = UserContext.getCurrentUserId();
+        List<Note> allNotes = noteRepository.findByUserId(currentUserId);
         Map<String, Integer> stats = new HashMap<>();
 
         // 先统计所有笔记中使用的标签
@@ -60,7 +64,7 @@ public class TagService {
         );
 
         // 然后添加所有已创建但未使用的标签
-        List<String> allTagNames = tagRepository.findAllTagNames();
+        List<String> allTagNames = tagRepository.findAllTagNamesByUserId(currentUserId);
         allTagNames.forEach(tagName ->
                 stats.putIfAbsent(tagName, 0)
         );
@@ -81,7 +85,8 @@ public class TagService {
         if (tags == null || tags.isEmpty()) {
             return new ArrayList<>();
         }
-        return noteRepository.findByTagsContainingAll(tags);
+        Long currentUserId = UserContext.getCurrentUserId();
+        return noteRepository.findByTagsContainingAllAndUserId(tags, currentUserId);
     }
 
     @OperationLog(value = "模糊搜索标签", type = OperationLog.OperationType.QUERY)
@@ -92,7 +97,8 @@ public class TagService {
         }
 
         String searchTerm = keyword.trim().toLowerCase();
-        List<Note> allNotes = noteRepository.findAll();
+        Long currentUserId = UserContext.getCurrentUserId();
+        List<Note> allNotes = noteRepository.findByUserId(currentUserId);
 
         return allNotes.stream()
                 .filter(note -> note.getTags().stream()
@@ -108,8 +114,9 @@ public class TagService {
         }
 
         String tagName = name.trim();
-        return tagRepository.findByName(tagName)
-                .orElseGet(() -> tagRepository.save(new Tag(tagName)));
+        Long currentUserId = UserContext.getCurrentUserId();
+        return tagRepository.findByNameAndUserId(tagName, currentUserId)
+                .orElseGet(() -> tagRepository.save(new Tag(tagName, currentUserId)));
     }
 
     @OperationLog(value = "删除标签", type = OperationLog.OperationType.DELETE)
@@ -119,12 +126,14 @@ public class TagService {
             throw new ValidationException("name", "标签名称不能为空");
         }
 
-        Tag tag = tagRepository.findByName(name.trim())
+        String tagName = name.trim();
+        Long currentUserId = UserContext.getCurrentUserId();
+        Tag tag = tagRepository.findByNameAndUserId(tagName, currentUserId)
                 .orElseThrow(() -> new NotFoundException("标签", name));
 
-        // 从所有笔记中移除该标签
-        List<Note> notesWithTag = noteRepository.findByTag(name.trim());
-        notesWithTag.forEach(note -> note.removeTag(name.trim()));
+        // 从当前用户的所有笔记中移除该标签
+        List<Note> notesWithTag = noteRepository.findByTagAndUserId(tagName, currentUserId);
+        notesWithTag.forEach(note -> note.removeTag(tagName));
         noteRepository.saveAll(notesWithTag);
 
         tagRepository.delete(tag);
@@ -133,13 +142,15 @@ public class TagService {
     @OperationLog(value = "获取所有标签实体", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "获取所有标签实体", threshold = 600, recordParams = false)
     public List<Tag> getAllTagEntities() {
-        return tagRepository.findAll();
+        Long currentUserId = UserContext.getCurrentUserId();
+        return tagRepository.findByUserId(currentUserId);
     }
 
     @OperationLog(value = "根据名称获取标签", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "根据名称获取标签", threshold = 400)
     public Optional<Tag> getTagByName(String name) {
-        return tagRepository.findByName(name);
+        Long currentUserId = UserContext.getCurrentUserId();
+        return tagRepository.findByNameAndUserId(name, currentUserId);
     }
 
     @OperationLog(value = "获取热门标签", type = OperationLog.OperationType.QUERY)

@@ -7,6 +7,7 @@ import com.example.pkm_web.exception.ValidationException;
 import com.example.pkm_web.model.Category;
 import com.example.pkm_web.repository.CategoryRepository;
 import com.example.pkm_web.repository.NoteRepository;
+import com.example.pkm_web.util.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,12 +36,13 @@ public class CategoryService {
         }
 
         String trimmedName = name.trim();
-        if (categoryRepository.existsByName(trimmedName)) {
+        Long currentUserId = UserContext.getCurrentUserId();
+        if (categoryRepository.existsByNameAndUserId(trimmedName, currentUserId)) {
             throw new ValidationException("name", "分类名称已存在");
         }
 
         String id = UUID.randomUUID().toString();
-        Category category = new Category(id, trimmedName);
+        Category category = new Category(id, trimmedName, currentUserId);
         
         // 处理 description：如果为 null 或空字符串，则设为 null
         if (description != null && !description.trim().isEmpty()) {
@@ -55,7 +57,8 @@ public class CategoryService {
     @OperationLog(value = "获取所有分类", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "获取所有分类", threshold = 800, recordParams = false)
     public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+        Long currentUserId = UserContext.getCurrentUserId();
+        return categoryRepository.findByUserId(currentUserId);
     }
 
     @OperationLog(value = "根据ID获取分类", type = OperationLog.OperationType.QUERY)
@@ -64,7 +67,8 @@ public class CategoryService {
         if (id == null || id.trim().isEmpty()) {
             throw new ValidationException("id", "分类ID不能为空");
         }
-        return categoryRepository.findById(id.trim())
+        Long currentUserId = UserContext.getCurrentUserId();
+        return categoryRepository.findByIdAndUserId(id.trim(), currentUserId)
                 .orElseThrow(() -> new NotFoundException("分类", id));
     }
 
@@ -75,8 +79,9 @@ public class CategoryService {
 
         if (name != null && !name.trim().isEmpty()) {
             String trimmedName = name.trim();
-            // 检查新名称是否与其他分类冲突
-            if (!category.getName().equals(trimmedName) && categoryRepository.existsByName(trimmedName)) {
+            Long currentUserId = UserContext.getCurrentUserId();
+            // 检查新名称是否与当前用户的其他分类冲突
+            if (!category.getName().equals(trimmedName) && categoryRepository.existsByNameAndUserId(trimmedName, currentUserId)) {
                 throw new ValidationException("name", "分类名称已存在");
             }
             category.setName(trimmedName);
@@ -93,9 +98,10 @@ public class CategoryService {
     @PerformanceMonitor(value = "删除分类", threshold = 2000, recordResult = false)
     public void deleteCategory(String id) {
         Category category = getCategoryById(id);
+        Long currentUserId = UserContext.getCurrentUserId();
         
-        // 删除分类前，将该分类下的所有笔记的分类ID设为null
-        noteRepository.findAll().stream()
+        // 删除分类前，将该分类下的所有笔记的分类ID设为null（仅当前用户的笔记）
+        noteRepository.findByUserId(currentUserId).stream()
                 .filter(note -> id.equals(note.getCategoryId()))
                 .forEach(note -> {
                     note.setCategoryId(null);
@@ -108,9 +114,10 @@ public class CategoryService {
     @OperationLog(value = "根据分类获取笔记数量", type = OperationLog.OperationType.QUERY)
     @PerformanceMonitor(value = "根据分类获取笔记数量", threshold = 1000)
     public long getNoteCountByCategory(String categoryId) {
+        Long currentUserId = UserContext.getCurrentUserId();
         if (categoryId == null || categoryId.trim().isEmpty() || "null".equalsIgnoreCase(categoryId.trim())) {
-            return noteRepository.findByCategoryIdIsNull().size();
+            return noteRepository.findByCategoryIdIsNullAndUserId(currentUserId).size();
         }
-        return noteRepository.findByCategoryId(categoryId.trim()).size();
+        return noteRepository.findByCategoryIdAndUserId(categoryId.trim(), currentUserId).size();
     }
 }

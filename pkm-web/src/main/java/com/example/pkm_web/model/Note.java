@@ -37,6 +37,9 @@ public class Note implements Serializable {
     @Column(name = "category_id")
     private String categoryId;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -53,6 +56,16 @@ public class Note implements Serializable {
     public Note(String id, String title, String content) {
         this(title, content);
         this.id = id;
+    }
+    
+    public Note(String title, String content, Long userId) {
+        this(title, content);
+        this.userId = userId;
+    }
+    
+    public Note(String id, String title, String content, Long userId) {
+        this(id, title, content);
+        this.userId = userId;
     }
 
 
@@ -89,6 +102,12 @@ public class Note implements Serializable {
 
     public void setCategoryId(String categoryId) {
         this.categoryId = categoryId;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) {
+        this.userId = userId;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -152,6 +171,6 @@ public class Note implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("Note{id='%s', title='%s', tags=%s}", id, title, tags);
+        return String.format("Note{id='%s', title='%s', tags=%s, userId=%d}", id, title, tags, userId);
     }
 }

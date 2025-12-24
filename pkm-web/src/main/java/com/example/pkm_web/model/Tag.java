@@ -16,11 +16,25 @@ public class Tag {
     @Column(unique = true, nullable = false)
     private String name;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     // 构造方法
     public Tag() {}
 
     public Tag(String name) {
         this.name = name;
+    }
+    
+    public Tag(String name, Long userId) {
+        this.name = name;
+        this.userId = userId;
+    }
+    
+    public Tag(Long id, String name, Long userId) {
+        this.id = id;
+        this.name = name;
+        this.userId = userId;
     }
 
 
@@ -43,6 +57,14 @@ public class Tag {
         this.name = name;
     }
 
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
     // 重写 equals 和 hashCode 方法，基于 id 和 name
     @Override
     public boolean equals(Object o) {
@@ -50,12 +72,13 @@ public class Tag {
         if (o == null || getClass() != o.getClass()) return false;
         Tag tag = (Tag) o;
         return Objects.equals(id, tag.id) &&
-                Objects.equals(name, tag.name);
+                Objects.equals(name, tag.name) &&
+                Objects.equals(userId, tag.userId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name);
+        return Objects.hash(id, name, userId);
     }
 
     // 重写 toString 方法
@@ -64,6 +87,7 @@ public class Tag {
         return "Tag{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", userId=" + userId +
                 '}';
     }
 }

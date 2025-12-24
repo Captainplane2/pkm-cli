@@ -22,6 +22,9 @@ public class Category implements Serializable {
     @Column(length = 500)
     private String description;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -37,6 +40,16 @@ public class Category implements Serializable {
     public Category(String id, String name) {
         this(name);
         this.id = id;
+    }
+    
+    public Category(String name, Long userId) {
+        this(name);
+        this.userId = userId;
+    }
+    
+    public Category(String id, String name, Long userId) {
+        this(id, name);
+        this.userId = userId;
     }
 
     // Getter 和 Setter
@@ -64,6 +77,15 @@ public class Category implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -113,7 +135,7 @@ public class Category implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("Category{id='%s', name='%s'}", id, name);
+        return String.format("Category{id='%s', name='%s', userId=%d}", id, name, userId);
     }
 }
 
