@@ -9,7 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 /**
- * 数据初始化（开发期使用）
+ * 数据初始化
  */
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -30,7 +30,7 @@ public class DataInitializer implements CommandLineRunner {
         UserContext.setCurrentUserId(defaultUserId);
         
         try {
-            // 检查是否有数据，如果没有则初始化一些示例数据
+            // 检查是否有数据，如果没有则初始化示例数据
             if (noteService.getAllNotes().isEmpty()) {
                 logger.info("初始化示例数据...");
 

@@ -69,8 +69,6 @@ public class Note implements Serializable {
     }
 
 
-    // Getter和Setter保持不变...
-    // [原有的getter/setter方法保持不变]
     // Getter和Setter
     public String getId() { return id; }
     public void setId(String id) {

@@ -5,7 +5,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * 用户实体类 - 用于多用户系统的数据隔离
+ * 用户实体类 - 用于多用户系统的数据隔离和安全认证
  */
 @Entity
 @Table(name = "users")
@@ -19,9 +19,12 @@ public class User implements Serializable {
     @Column(unique = true, nullable = false)
     private String username;
 
-    private String password; // 暂时存储明文或简单加密
+    @Column(nullable = false)
+    private String password;
 
     private String email;
+
+    private String role = "ROLE_USER";
 
     // 构造方法
     public User() {}
@@ -66,6 +69,14 @@ public class User implements Serializable {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     @Override

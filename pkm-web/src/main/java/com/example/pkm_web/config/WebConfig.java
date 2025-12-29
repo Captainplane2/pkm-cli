@@ -1,23 +1,12 @@
 package com.example.pkm_web.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     
-    private final UserInterceptor userInterceptor;
+    // UserInterceptor 已由 Spring Security 的 JwtAuthenticationFilter 替代
+    // 如果需要兼容旧逻辑，可以在此处添加新的拦截器
     
-    @Autowired
-    public WebConfig(UserInterceptor userInterceptor) {
-        this.userInterceptor = userInterceptor;
-    }
-    
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(userInterceptor)
-                .addPathPatterns("/api/**"); // 拦截所有API请求
-    }
 }

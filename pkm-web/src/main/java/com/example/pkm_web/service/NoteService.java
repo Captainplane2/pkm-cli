@@ -24,7 +24,8 @@ public class NoteService {
 
     private final NoteRepository noteRepository;
 
-    @Autowired
+    @Autowired //在Spring Boot中，当构造函数只有一个参数且该参数是依赖注入的Bean时，
+               // @Autowired注解是多余的。Spring会自动识别并注入依赖，无需显式标注。
     public NoteService(NoteRepository noteRepository) {
         this.noteRepository = noteRepository;
     }

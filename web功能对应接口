@@ -1,0 +1,67 @@
+功能对应关系
+CLI命令           Web API端点                      HTTP方法
+new               /api/notes                       POST
+list              /api/notes                       GET
+view <id>         /api/notes/{id}                  GET
+edit content      /api/notes/{id}/content          PUT
+edit title        /api/notes/{id}/title            PUT
+delete            /api/notes/{id}                  DELETE
+tag add           /api/notes/{id}/tags             POST
+tag remove        /api/notes/{id}/tags/{tag}       DELETE
+search            /api/notes/search?keyword={}     GET
+tags list         /api/tags                        GET
+tags stats        /api/tags/statistics             GET
+tags search       /api/tags/{tag}/notes            GET
+categories list   /api/categories                  GET
+categories new    /api/categories                  POST
+categories view   /api/categories/{id}             GET
+categories edit   /api/categories/{id}             PUT
+categories delete /api/categories/{id}             DELETE
+
+
+用户认证接口（Spring Security + JWT）
+功能         API端点                               HTTP方法  说明
+用户注册     /api/auth/register                    POST     注册新用户，返回JWT Token
+用户登录     /api/auth/login                       POST     登录验证，返回JWT Token
+
+
+新增功能（Web版）
+功能         API端点                               HTTP方法  说明
+批量更新笔记  /api/notes/{id}                       PUT      更新整个笔记对象
+获取热门标签  /api/tags/popular                     GET      获取使用频率最高的标签
+笔记排序     /api/notes?sort=createdAt,desc         GET      支持按时间排序
+分页查询     /api/notes?page=0&size=10             GET      支持分页（可扩展）
+按分类查询   /api/notes?categoryId={}              GET      按分类筛选笔记
+按标签查询   /api/notes?tag={}                     GET      按标签筛选笔记
+模糊搜索     /api/notes/search?keyword={}          GET      支持多条件模糊搜索
+
+
+多用户数据隔离接口（ThreadLocal + SecurityContext）
+功能         API端点                               HTTP方法  说明
+获取笔记     /api/notes                            GET      返回当前用户的笔记列表
+创建笔记     /api/notes                            POST     自动关联当前用户ID
+更新笔记     /api/notes/{id}                       PUT      只能操作当前用户的笔记
+删除笔记     /api/notes/{id}                       DELETE   只能操作当前用户的笔记
+获取分类     /api/categories                       GET      返回当前用户的分类列表
+创建分类     /api/categories                       POST     自动关联当前用户ID
+删除分类     /api/categories/{id}                  DELETE   只能删除当前用户的分类
+获取标签     /api/tags                             GET      返回当前用户使用的标签
+
+
+认证与授权说明
+1. 注册/登录接口无需认证，返回JWT Token
+2. 其他所有接口需要在请求头携带Token: Authorization: Bearer <token>
+3. Token有效期: 24小时（可在application.properties中配置jwt.expiration）
+4. Spring Security会自动验证Token并设置SecurityContext
+5. UserContext同时支持ThreadLocal（兼容旧逻辑）和SecurityContext（标准安全上下文）
+
+
+数据库表结构
+表名      字段                                  说明
+notes     id, title, content, created_at, updated_at, user_id  笔记主表（含用户ID）
+note_tags note_id, tag                          笔记标签关联表
+tags      id, name, usage_count, user_id         标签表（可扩展，含用户ID）
+categories id, name, description, user_id        分类表（含用户ID）
+users     id, username, password, email, role    用户表（新增）
+
+
