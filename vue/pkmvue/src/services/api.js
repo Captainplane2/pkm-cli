@@ -13,7 +13,10 @@ const api = axios.create({
 // 请求拦截器
 api.interceptors.request.use(
   config => {
-    // 可以在这里添加认证token等
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   error => {
@@ -28,14 +31,16 @@ api.interceptors.response.use(
   },
   error => {
     console.error('API Error:', error)
-    // 解析后端返回的错误响应
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      window.dispatchEvent(new Event('auth-change'))
+    }
     let errorMessage = '操作失败，请稍后重试'
     if (error.response && error.response.data) {
       const errorData = error.response.data
-      // 检查是否是后端统一的错误响应格式
       if (errorData.errorCode && errorData.message) {
         errorMessage = errorData.message
-        // 将完整的错误信息附加到error对象上，方便组件使用
         error.errorResponse = errorData
       } else {
         errorMessage = errorData.message || errorData.error || '操作失败'
@@ -43,14 +48,18 @@ api.interceptors.response.use(
     } else if (error.message) {
       errorMessage = error.message
     }
-    
-    // 将处理后的错误信息添加到error对象
     error.handledMessage = errorMessage
     return Promise.reject(error)
   }
 )
 
 // 笔记相关API
+export const authApi = {
+  register: (userData) => api.post('/auth/register', userData),
+  login: (credentials) => api.post('/auth/login', credentials),
+  getCurrentUser: () => api.get('/auth/me')
+}
+
 export const noteApi = {
   // 获取所有笔记
   getAllNotes: () => api.get('/notes'),
@@ -78,6 +87,12 @@ export const noteApi = {
   
   // 移除标签
   removeTag: (id, tag) => api.delete(`/notes/${id}/tags/${tag}`),
+
+  // 导出用户数据
+  exportData: () => api.get('/notes/export'),
+
+  // 导入用户数据
+  importData: (data) => api.post('/notes/import', data),
   
   // 更新笔记分类
   updateNoteCategory: (id, categoryId) => api.put(`/notes/${id}/category`, { categoryId }),

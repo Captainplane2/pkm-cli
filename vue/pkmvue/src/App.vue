@@ -17,6 +17,30 @@
             />
           </div>
         </div>
+
+        <div v-if="authService.state.isAuthenticated" class="user-info">
+          <el-avatar :size="32" :src="authService.state.user?.avatar">
+            {{ authService.state.user?.username?.charAt(0)?.toUpperCase() }}
+          </el-avatar>
+          <span class="username">{{ authService.state.user?.username }}</span>
+          <el-button type="text" size="small" title="导入数据" @click="triggerImport">
+            <el-icon><Upload /></el-icon>
+          </el-button>
+          <el-button type="text" size="small" title="导出数据" @click="handleExport">
+            <el-icon><Download /></el-icon>
+          </el-button>
+          <el-button type="text" size="small" title="退出登录" @click="handleLogout">
+            <el-icon><SwitchButton /></el-icon>
+          </el-button>
+        </div>
+        <div v-else class="auth-buttons">
+          <el-button type="primary" size="small" @click="showLoginDialog">
+            登录
+          </el-button>
+          <el-button size="small" @click="showRegisterDialog">
+            注册
+          </el-button>
+        </div>
         
         <el-menu
           :default-active="activeMenu"
@@ -108,18 +132,40 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <Login
+      v-model="showLogin"
+      @login-success="handleLoginSuccess"
+    />
+    
+    <Register
+      v-model="showRegister"
+      @switch-to-login="showLoginDialog"
+    />
+
+    <!-- 隐藏的导入文件输入框 -->
+    <input
+      ref="importFileRef"
+      type="file"
+      accept=".json"
+      style="display: none"
+      @change="handleImport"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { Notebook, Collection, FolderOpened } from '@element-plus/icons-vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { Notebook, Collection, FolderOpened, SwitchButton, Download, Upload } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import NoteList from './components/NoteList.vue'
 import NoteEditor from './components/NoteEditor.vue'
 import TagManager from './components/TagManager.vue'
 import CategoryManager from './components/CategoryManager.vue'
+import Login from './components/Login.vue'
+import Register from './components/Register.vue'
 import { noteApi, categoryApi } from './services/api'
+import { AuthService } from './services/AuthService'
 
 const STORAGE_KEY = 'pkm_notes_cache'
 const THEME_KEY = 'pkm_theme'
@@ -135,6 +181,10 @@ const showCreateDialog = ref(false)
 const newNoteTitle = ref('')
 const newNoteContent = ref('')
 const creating = ref(false)
+const showLogin = ref(false)
+const showRegister = ref(false)
+const importFileRef = ref(null)
+const authService = AuthService
 
 const displayNotes = computed(() => {
   let filtered = notes.value
@@ -304,6 +354,84 @@ const handleCategoryClick = (categoryId) => {
 const handleThemeChange = () => {
   // 具体逻辑由 watch(isDark) 统一处理，这里无需额外代码
 }
+
+const showLoginDialog = () => {
+  showLogin.value = true
+}
+
+const showRegisterDialog = () => {
+  showRegister.value = true
+}
+
+const handleLogout = () => {
+  AuthService.logout()
+  ElMessage.success('已退出登录')
+}
+
+const handleExport = async () => {
+  try {
+    const data = await noteApi.exportData()
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `pkm_export_${new Date().getTime()}.json`
+    link.click()
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('数据导出成功')
+  } catch (error) {
+    ElMessage.error('导出失败：' + (error.handledMessage || '未知错误'))
+  }
+}
+
+const triggerImport = () => {
+  if (importFileRef.value) {
+    importFileRef.value.click()
+  }
+}
+
+const handleImport = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result)
+      await noteApi.importData(data)
+      ElMessage.success('数据导入成功')
+      loadNotes()
+      loadCategories()
+    } catch (error) {
+      ElMessage.error('导入失败：格式不正确或服务器错误')
+      console.error(error)
+    } finally {
+      event.target.value = '' // 重置输入框
+    }
+  }
+  reader.readAsText(file)
+}
+
+const handleLoginSuccess = async () => {
+  ElMessage.success('登录成功')
+  loadNotes()
+}
+
+const handleAuthChange = () => {
+  if (!AuthService.isAuthenticated()) {
+    notes.value = []
+    selectedNote.value = null
+    loadNotesFromLocal()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('auth-change', handleAuthChange)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('auth-change', handleAuthChange)
+})
 </script>
 
 <style scoped>
@@ -352,6 +480,43 @@ const handleThemeChange = () => {
 
 .app-icon {
   font-size: 24px;
+}
+
+.user-info {
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #2d3748;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.user-info .username {
+  flex: 1;
+  font-size: 14px;
+  color: #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-info .el-button {
+  color: #a0aec0;
+}
+
+.user-info .el-button:hover {
+  color: #f56565;
+}
+
+.auth-buttons {
+  padding: 12px 20px;
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #2d3748;
+}
+
+.auth-buttons .el-button {
+  flex: 1;
 }
 
 .sidebar-menu {
