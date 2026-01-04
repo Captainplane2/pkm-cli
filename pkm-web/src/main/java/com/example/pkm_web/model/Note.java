@@ -70,7 +70,10 @@ public class Note implements Serializable {
 
 
     // Getter和Setter
-    public String getId() { return id; }
+    public String getId() { 
+        return id; 
+    }
+    
     public void setId(String id) {
         this.id = id;
         this.updatedAt = LocalDateTime.now();
@@ -121,7 +124,7 @@ public class Note implements Serializable {
     }
 
     public void removeTag(String tag) {
-        if (tag != null && tags.remove(tag.trim())) {
+        if (tag != null && tags.remove(tag.trim())) {   //tags.remove() 返回布尔值，表示是否成功移除了该元素
             this.updatedAt = LocalDateTime.now();
         }
     }

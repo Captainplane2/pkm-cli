@@ -239,7 +239,7 @@ onMounted(() => {
 
   // 先从 localStorage 恢复一份，保证刷新页面数据不丢失
   loadNotesFromLocal()
-  // 再从后端拉最新数据，更新内存和 localStorage
+  // 再从后端拉最新数据，更新内存 and localStorage
   loadNotes()
   loadCategories()
 })
@@ -558,5 +558,96 @@ onUnmounted(() => {
 .tag-manager-wrapper,
 .category-manager-wrapper {
   height: 100%;
+}
+</style>
+
+<style>
+/* --- 全局暗色模式适配 (针对 Teleport 出来的 Dialog 等) --- */
+
+/* 1. 对话框背景与变量 */
+body.dark .el-dialog {
+  background-color: #1d1e1f !important;
+  --el-dialog-bg-color: #1d1e1f !important;
+  border: 1px solid #4c4d4f;
+}
+
+/* 2. 提升标题亮度 */
+body.dark .el-dialog__title {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+/* 3. 表单标签文字颜色 */
+body.dark .el-form-item__label {
+  color: #cfd3dc !important;
+}
+
+/* 4. 统一输入框样式 (黑底白字) */
+/* 针对普通的 Input 包装层 */
+body.dark .el-input__wrapper {
+  background-color: #141414 !important;
+  box-shadow: 0 0 0 1px #4c4d4f inset !important;
+}
+
+/* 针对 Input 的真实文本区域 */
+body.dark .el-input__inner {
+  color: #ffffff !important;
+  background-color: transparent !important;
+  caret-color: #409eff;
+}
+
+/* 针对 Textarea 文本区域 */
+body.dark .el-textarea__inner {
+  background-color: #141414 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 1px #4c4d4f inset !important;
+}
+
+/* 5. 修复占位符 (Placeholder) 颜色 */
+body.dark .el-input__inner::placeholder,
+body.dark .el-textarea__inner::placeholder {
+  color: #606266 !important;
+}
+
+/* 6. 焦点状态 (Focus) */
+body.dark .el-input__wrapper.is-focus,
+body.dark .el-textarea__inner:focus {
+  box-shadow: 0 0 0 1px #409eff inset !important;
+}
+
+/* 7. 暗色模式下的辅助按钮外观 */
+body.dark .el-button:not(.el-button--primary):not(.el-button--danger) {
+  background-color: #2b2b2b !important;
+  border-color: #4c4d4f !important;
+  color: #cfd3dc !important;
+}
+
+/* --- 亮色模式样式重置 (解决变黑问题) --- */
+body:not(.dark) .el-dialog {
+  background-color: #ffffff !important;
+  --el-dialog-bg-color: #ffffff !important;
+}
+
+body:not(.dark) .el-dialog__title {
+  color: #303133 !important;
+}
+
+body:not(.dark) .el-form-item__label {
+  color: #606266 !important;
+}
+
+body:not(.dark) .el-input__wrapper {
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 1px #dcdfe6 inset !important;
+}
+
+body:not(.dark) .el-textarea__inner {
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 1px #dcdfe6 inset !important;
+  color: #606266 !important;
+}
+
+body:not(.dark) .el-input__inner {
+  color: #606266 !important;
 }
 </style>

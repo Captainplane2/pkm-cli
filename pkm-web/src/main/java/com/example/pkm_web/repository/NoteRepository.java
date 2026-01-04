@@ -2,6 +2,7 @@ package com.example.pkm_web.repository;
 
 import com.example.pkm_web.model.Note;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -68,7 +69,14 @@ public interface NoteRepository extends JpaRepository<Note, String> {
      * 查找当前用户的所有笔记
      */
     List<Note> findByUserId(Long userId);
-    
+
+    /**
+     * 删除指定用户的所有笔记
+     */
+    @Modifying
+    @Query("DELETE FROM Note n WHERE n.userId = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
+
     /**
      * 检查笔记是否存在（按ID和userId）
      */

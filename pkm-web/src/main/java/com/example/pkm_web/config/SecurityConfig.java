@@ -5,6 +5,7 @@ import com.example.pkm_web.model.User;
 import com.example.pkm_web.service.UserAuthService;
 import com.example.pkm_web.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,7 +18,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -28,12 +28,17 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Spring Security配置类，用于配置应用程序的安全策略
+ * 包含JWT认证、CORS配置、密码编码等安全相关配置
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
     @Autowired
+    @Lazy
     private UserAuthService userAuthService;
 
     @Autowired
@@ -42,10 +47,16 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    /**
+     * 创建用户详情服务，用于根据标识符（用户名或邮箱）加载用户信息
+     * 
+     * @return UserDetailsService 用户详情服务实例
+     */
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> {
-            User user = userAuthService.findByUsername(username);
+        return identifier -> {
+            // identifier 可以是 username 或 email
+            User user = userAuthService.findByIdentifier(identifier);
             if (user == null) {
                 return null;
             }
@@ -57,6 +68,11 @@ public class SecurityConfig {
         };
     }
 
+    /**
+     * 创建认证提供者，使用DAO方式验证用户身份
+     * 
+     * @return AuthenticationProvider 认证提供者实例
+     */
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -65,16 +81,35 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    /**
+     * 获取认证管理器，用于处理认证请求
+     * 
+     * @param config 认证配置
+     * @return AuthenticationManager 认证管理器实例
+     * @throws Exception 配置异常
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    /**
+     * 创建密码编码器，用于密码的加密和验证
+     * 
+     * @return PasswordEncoder 密码编码器实例
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
     }
 
+    /**
+     * 配置安全过滤器链，定义HTTP请求的安全策略
+     * 
+     * @param http HTTP安全配置对象
+     * @return SecurityFilterChain 安全过滤器链实例
+     * @throws Exception 配置异常
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -82,7 +117,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/deregister").authenticated()
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated()
@@ -93,6 +129,11 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * 配置CORS（跨域资源共享）策略
+     * 
+     * @return CorsConfigurationSource CORS配置源
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

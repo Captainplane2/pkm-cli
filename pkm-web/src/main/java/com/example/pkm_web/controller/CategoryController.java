@@ -45,7 +45,7 @@ public class CategoryController {
         return ResponseEntity.ok(categories);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}")    //@PathVariable 用于绑定路径变量{id}到方法参数
     public ResponseEntity<Category> getCategoryById(@PathVariable String id) {
         Category category = categoryService.getCategoryById(id);
         return ResponseEntity.ok(category);
@@ -53,8 +53,8 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Category> updateCategory(
-            @PathVariable String id,
-            @RequestBody Map<String, String> request) {
+            @PathVariable String id,    
+            @RequestBody Map<String, String> request) {     //@RequestBody 将请求体中的 JSON 数据（例如 {"name": "New Category", "description": "Updated Description"}）映射为 Map<String, String> 类型的 request 参数。
         String name = request.get("name");
         String description = request.get("description");
         Category category = categoryService.updateCategory(id, name, description);

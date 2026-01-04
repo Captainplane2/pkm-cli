@@ -2,6 +2,7 @@ package com.example.pkm_web.controller;
 
 import com.example.pkm_web.model.User;
 import com.example.pkm_web.service.UserAuthService;
+import com.example.pkm_web.util.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,24 @@ public class AuthController {
         }
 
         Map<String, Object> result = userAuthService.login(username, password);
+        if (Boolean.TRUE.equals(result.get("success"))) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.badRequest().body(result);
+        }
+    }
+
+    @DeleteMapping("/deregister")
+    public ResponseEntity<Map<String, Object>> deregister() {
+        Long currentUserId = UserContext.getCurrentUserId();
+        if (currentUserId == null) {
+            return ResponseEntity.status(401).body(Map.of(
+                    "success", false,
+                    "message", "请先登录"
+            ));
+        }
+
+        Map<String, Object> result = userAuthService.deleteUser(currentUserId);
         if (Boolean.TRUE.equals(result.get("success"))) {
             return ResponseEntity.ok(result);
         } else {

@@ -12,13 +12,13 @@ import jakarta.servlet.http.HttpServletResponse;
  * @Deprecated
  * 此拦截器已由 Spring Security 的 JwtAuthenticationFilter 替代。
  * 保留此文件仅用于参考或兼容旧逻辑。
- * 如果需要启用旧逻辑，请取消注释以下代码并在 WebConfig 中重新注册。
+ * 如果需要启用旧逻辑，请取消注释@Component和@Override并在 WebConfig 中重新注册。
  */
 //@Component
 public class UserInterceptor implements HandlerInterceptor {
     //@Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        // 模拟：假设当前登录用户是 ID 为 1 的用户
+        // 模拟：假设当前登录用户是 ID 为 1 的用户（硬编码）
         // 在后续完善中，这里会从 Session 或 JWT Token 中解析用户 ID
         Long defaultUserId = 1L;
         UserContext.setCurrentUserId(defaultUserId);

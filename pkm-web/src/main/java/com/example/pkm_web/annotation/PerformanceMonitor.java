@@ -6,8 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 性能监控注解
- * 用于标记需要进行性能监控的方法
+ * 性能监控注解,用于标记需要进行性能监控的方法
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

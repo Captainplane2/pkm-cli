@@ -92,4 +92,25 @@ public class NoteController {
         List<Note> notes = noteService.findNotesByCategory(categoryId);
         return ResponseEntity.ok(notes);
     }
+
+    /**
+     * 导出用户的所有数据
+     */
+    @GetMapping("/export")
+    public ResponseEntity<Map<String, Object>> exportData() {
+        Map<String, Object> data = noteService.exportUserData();
+        return ResponseEntity.ok(data);
+    }
+
+    /**
+     * 导入用户数据
+     */
+    @PostMapping("/import")
+    public ResponseEntity<Map<String, Object>> importData(@RequestBody Map<String, Object> data) {
+        noteService.importUserData(data);
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "数据导入成功"
+        ));
+    }
 }

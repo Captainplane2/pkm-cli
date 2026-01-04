@@ -3,7 +3,7 @@ package com.example.pkm_web.annotation;
 import java.lang.annotation.*;
 
 /**
- * 缓存清除注解，用于标记需要清除缓存的方法
+ * 自定义清除缓存注解，用于标记需要清除缓存的方法
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

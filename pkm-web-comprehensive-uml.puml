@@ -1,0 +1,125 @@
+@startuml PKM-Web-Comprehensive-UML
+
+' --- 样式配置 ---
+skinparam class {
+    BackgroundColor White
+    ArrowColor #2688d2
+    BorderColor #2688d2
+}
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+package "pkm_web" {
+
+    ' --- Controller 层 ---
+    package "Controller (REST API)" #E8F5E9 {
+        class AuthController {
+            + register(user: User): ResponseEntity
+            + login(request: Map): ResponseEntity
+        }
+        class NoteController {
+            + createNote(note: Note): ResponseEntity
+            + listNotes(): ResponseEntity
+            + exportData(): ResponseEntity
+            + importData(data: Map): ResponseEntity
+        }
+        class CategoryController {
+            + createCategory(request: Map): ResponseEntity
+            + listCategories(): ResponseEntity
+        }
+        class TagController {
+            + listAllTags(): ResponseEntity
+        }
+    }
+
+    ' --- Service 层 ---
+    package "Service (Business Logic)" #FFF3E0 {
+        class UserAuthService {
+            + login(identifier: String, pass: String): Map
+        }
+        class NoteService {
+            + createNote(title: String, content: String): Note
+            + getAllNotes(): List<Note>
+        }
+        class CategoryService
+        class TagService
+    }
+
+    ' --- Repository 层 ---
+    package "Repository (Data Access)" #E3F2FD {
+        interface UserRepository
+        interface NoteRepository
+        interface CategoryRepository
+        interface TagRepository
+    }
+
+    ' --- Model 层 ---
+    package "Model (Entities)" #F9F9F9 {
+        class User
+        class Note
+        class Category
+        class Tag
+    }
+
+    ' --- Aspect 层 (切面) ---
+    package "Aspects (Infrastructure)" #F3E5F5 {
+        class LoggingAspect
+        class ApiLoggingAspect
+        class PerformanceMonitorAspect
+        class CacheAspect
+        class ValidationAspect
+
+        package "Annotations" #EEEEEE {
+            annotation OperationLog
+            annotation PerformanceMonitor
+            annotation Cacheable
+            annotation Validation
+        }
+    }
+
+    ' --- Exception 层 (异常处理) ---
+    package "Exception Handling" #FFEBEE {
+        class GlobalExceptionHandler
+        class ErrorResponse
+        exception PKMException
+        exception NotFoundException
+        exception ValidationException
+    }
+
+    ' --- Util 层 (工具类) ---
+    package "Util (Helpers)" #E0F7FA {
+        class JwtUtil
+        class UserContext
+    }
+
+    ' --- 核心依赖关系 ---
+
+    ' 1. 控制流
+    Controller --> Service : 调用
+    Service --> Repository : 调用
+    Repository ..> Model : 返回
+
+    ' 2. 异常控制流
+    Service ..> PKMException : 抛出
+    PKMException <|-- NotFoundException
+    PKMException <|-- ValidationException
+    GlobalExceptionHandler ..> PKMException : 捕获
+    GlobalExceptionHandler ..> ErrorResponse : 封装返回
+
+    ' 3. 切面拦截 (横切关注点)
+    LoggingAspect ..> OperationLog : 识别
+    PerformanceMonitorAspect ..> PerformanceMonitor : 识别
+    CacheAspect ..> Cacheable : 识别
+    ValidationAspect ..> Validation : 识别
+    
+    Aspects ..> Service : 主动拦截业务
+    ApiLoggingAspect ..> Controller : 拦截 API 请求
+
+    ' 4. 工具类辅助
+    Service ..> UserContext : 获取当前用户
+    UserAuthService ..> JwtUtil : 签发 Token
+
+}
+
+@enduml

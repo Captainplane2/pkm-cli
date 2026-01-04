@@ -175,6 +175,24 @@
     border-color: #409eff;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   }
+
+  /* 暗色模式适配 */
+  .dark .tag-card {
+    background-color: #2b2b2b;
+    border-color: #374151;
+  }
+
+  .dark .tag-name {
+    color: #ffffff;
+  }
+
+  .dark .tag-count {
+    color: #9ca3af;
+  }
+
+  .dark .manager-header h3 {
+    color: #e5e7eb;
+  }
   
   .tag-header {
     display: flex;

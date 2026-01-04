@@ -2,6 +2,7 @@ package com.example.pkm_web.repository;
 
 import com.example.pkm_web.model.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -48,4 +49,11 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
      * 查找当前用户的所有标签
      */
     List<Tag> findByUserId(Long userId);
+
+    /**
+     * 删除指定用户的所有标签记录
+     */
+    @Modifying
+    @Query("DELETE FROM Tag t WHERE t.userId = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }

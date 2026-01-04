@@ -364,42 +364,42 @@ const handleUpdateCategory = async () => {
 }
 
 /* 暗色模式适配 */
-:deep(body.dark) .category-manager {
-  background-color: #1f2933;
+.dark .category-manager {
+  background-color: #1a1a1a;
   color: #e5e7eb;
 }
 
-:deep(body.dark) .manager-header h3 {
+.dark .manager-header h3 {
   color: #e5e7eb;
 }
 
-:deep(body.dark) .category-item {
-  background-color: #111827;
+.dark .category-item {
+  background-color: #2b2b2b;
   border-color: #374151;
 }
 
-:deep(body.dark) .category-item:hover {
+.dark .category-item:hover {
   border-color: #409eff;
 }
 
-:deep(body.dark) .category-item.active {
+.dark .category-item.active {
   background-color: #1e3a5f;
   border-color: #409eff;
 }
 
-:deep(body.dark) .category-name {
-  color: #e5e7eb;
+.dark .category-name {
+  color: #ffffff;
 }
 
-:deep(body.dark) .category-count {
+.dark .category-count {
   color: #9ca3af;
 }
 
-:deep(body.dark) .more-btn {
+.dark .more-btn {
   color: #9ca3af;
 }
 
-:deep(body.dark) .more-btn:hover {
+.dark .more-btn:hover {
   background-color: #374151;
 }
 </style>

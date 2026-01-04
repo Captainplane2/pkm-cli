@@ -6,6 +6,7 @@ import com.example.pkm_web.annotation.OperationLog;
 import com.example.pkm_web.annotation.PerformanceMonitor;
 import com.example.pkm_web.annotation.Validation;
 import com.example.pkm_web.exception.NotFoundException;
+import com.example.pkm_web.exception.PKMException;
 import com.example.pkm_web.exception.ValidationException;
 import com.example.pkm_web.model.Note;
 import com.example.pkm_web.repository.NoteRepository;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,11 +25,13 @@ import java.util.UUID;
 public class NoteService {
 
     private final NoteRepository noteRepository;
+    private final com.example.pkm_web.repository.CategoryRepository categoryRepository;
 
     @Autowired //在Spring Boot中，当构造函数只有一个参数且该参数是依赖注入的Bean时，
                // @Autowired注解是多余的。Spring会自动识别并注入依赖，无需显式标注。
-    public NoteService(NoteRepository noteRepository) {
+    public NoteService(NoteRepository noteRepository, com.example.pkm_web.repository.CategoryRepository categoryRepository) {
         this.noteRepository = noteRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @OperationLog(value = "创建新笔记", type = OperationLog.OperationType.CREATE)
@@ -37,6 +41,9 @@ public class NoteService {
     public Note createNote(String title, String content) {
         String id = UUID.randomUUID().toString();
         Long currentUserId = UserContext.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new PKMException("USER_NOT_AUTHENTICATED", "用户未登录，无法创建笔记");
+        }
         Note note = new Note(id, title.trim(), content != null ? content.trim() : "", currentUserId);
         return noteRepository.save(note);
     }
@@ -195,6 +202,68 @@ public class NoteService {
         long averageTagsPerNote = totalNotes > 0 ? totalTags / totalNotes : 0;
 
         return new NoteStatistics(totalNotes, totalTags, averageTagsPerNote);
+    }
+
+    /**
+     * 导出用户的所有数据（笔记、分类、标签）
+     */
+    @OperationLog(value = "导出用户数据", type = OperationLog.OperationType.QUERY)
+    public Map<String, Object> exportUserData() {
+        Long currentUserId = UserContext.getCurrentUserId();
+        List<Note> userNotes = noteRepository.findByUserId(currentUserId);
+        List<com.example.pkm_web.model.Category> userCategories = categoryRepository.findByUserId(currentUserId);
+
+        Map<String, Object> exportData = new java.util.HashMap<>();
+        exportData.put("notes", userNotes);
+        exportData.put("categories", userCategories);
+        exportData.put("exportTime", java.time.LocalDateTime.now().toString());
+        exportData.put("userId", currentUserId);
+
+        return exportData;
+    }
+
+    /**
+     * 导入用户数据
+     */
+    @OperationLog(value = "导入用户数据", type = OperationLog.OperationType.CREATE)
+    @CacheEvict(allEntries = true)
+    public void importUserData(Map<String, Object> data) {
+        Long currentUserId = UserContext.getCurrentUserId();
+        
+        // 导入分类
+        List<Map<String, Object>> categories = (List<Map<String, Object>>) data.get("categories");
+        if (categories != null) {
+            for (Map<String, Object> catMap : categories) {
+                String name = (String) catMap.get("name");
+                if (!categoryRepository.existsByNameAndUserId(name, currentUserId)) {
+                    com.example.pkm_web.model.Category category = new com.example.pkm_web.model.Category();
+                    category.setId(UUID.randomUUID().toString());
+                    category.setName(name);
+                    category.setDescription((String) catMap.get("description"));
+                    category.setUserId(currentUserId);
+                    categoryRepository.save(category);
+                }
+            }
+        }
+
+        // 导入笔记
+        List<Map<String, Object>> notes = (List<Map<String, Object>>) data.get("notes");
+        if (notes != null) {
+            for (Map<String, Object> noteMap : notes) {
+                Note note = new Note();
+                note.setId(UUID.randomUUID().toString());
+                note.setTitle((String) noteMap.get("title"));
+                note.setContent((String) noteMap.get("content"));
+                note.setUserId(currentUserId);
+                
+                List<String> tags = (List<String>) noteMap.get("tags");
+                if (tags != null) {
+                    note.setTags(tags);
+                }
+                
+                noteRepository.save(note);
+            }
+        }
     }
 
     /**

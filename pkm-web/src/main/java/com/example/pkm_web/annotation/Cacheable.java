@@ -4,7 +4,7 @@ import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 缓存注解，用于标记需要缓存结果的方法
+ * 自定义缓存注解，用于标记需要缓存结果的方法
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

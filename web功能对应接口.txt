@@ -1,0 +1,55 @@
+功能对应关系
+CLI命令           Web API端点                      HTTP方法  说明                          请求参数（JSON）                              请求头要求
+new               /api/notes                       POST     创建新笔记                  {"title": "笔记标题", "content": "笔记内容"}                Authorization: Bearer <token>
+list              /api/notes                       GET      列出所有笔记（当前用户）    无                                            Authorization: Bearer <token>
+view <id>         /api/notes/{id}                  GET      查看指定笔记详情            无                                            Authorization: Bearer <token>
+edit content      /api/notes/{id}/content          PUT      仅更新笔记内容              {"content": "新内容"}                          Authorization: Bearer <token>
+edit title        /api/notes/{id}/title            PUT      仅更新笔记标题              {"title": "新标题"}                           Authorization: Bearer <token>
+delete            /api/notes/{id}                  DELETE   删除指定笔记                无                                            Authorization: Bearer <token>
+tag add           /api/notes/{id}/tags             POST     为笔记添加标签              {"tag": "标签名"}                             Authorization: Bearer <token>
+tag remove        /api/notes/{id}/tags/{tag}       DELETE   从笔记移除标签              无                                            Authorization: Bearer <token>
+search            /api/notes/search?keyword={}     GET      关键字搜索笔记              无（keyword通过URL参数传递）                    Authorization: Bearer <token>
+tags list         /api/tags                        GET      列出所有标签名              无                                            Authorization: Bearer <token>
+tags stats        /api/tags/statistics             GET      获取标签使用统计            无                                            Authorization: Bearer <token>
+tags search       /api/tags/{tag}/notes            GET      按标签筛选笔记              无                                            Authorization: Bearer <token>
+categories list   /api/categories                  GET      列出所有分类                无                                            Authorization: Bearer <token>
+categories new    /api/categories                  POST     创建新分类                  {"name": "分类名称", "description": "分类描述（可选）"}  Authorization: Bearer <token>
+categories view   /api/categories/{id}             GET      查看分类详情                无                                            Authorization: Bearer <token>
+categories edit   /api/categories/{id}             PUT      更新分类信息                {"name": "新分类名称", "description": "新分类描述（可选）"}  Authorization: Bearer <token>
+categories delete /api/categories/{id}             DELETE   删除分类                    无                                            Authorization: Bearer <token>
+(N/A)             /api/notes/export                GET      导出用户全量数据 (JSON)     无                                            Authorization: Bearer <token>
+(N/A)             /api/notes/import                POST     导入用户全量数据 (JSON)     导入的JSON数据                                Authorization: Bearer <token>
+(N/A)             /api/notes/category/{categoryId} GET      按分类筛选笔记              无                                            Authorization: Bearer <token>
+(N/A)             /api/notes/{id}/category         PUT      修改笔记所属分类            {"categoryId": "分类ID"}                     Authorization: Bearer <token>
+(N/A)             /api/tags/multiple               POST     多标签搜索                  ["标签1", "标签2", ...]                      Authorization: Bearer <token>
+(N/A)             /api/tags/search?keyword={}      GET      标签模糊搜索                无（keyword通过URL参数传递）                    Authorization: Bearer <token>
+(N/A)             /api/categories/{id}/count       GET      获取分类笔记数量            无                                            Authorization: Bearer <token>
+
+
+用户认证接口（Spring Security + JWT）
+功能         API端点                               HTTP方法  说明                          请求参数（JSON）                              请求头要求
+用户注册     /api/auth/register                    POST     注册新用户                      {"username": "用户名", "password": "密码", "email": "邮箱"}  无
+用户登录     /api/auth/login                       POST     登录验证，支持用户名/邮箱，返回JWT Token  {"username": "用户名", "password": "密码"}    无
+用户注销     /api/auth/deregister                  DELETE   注销当前用户及其所有数据            无                              Authorization: Bearer <token>
+退出登录     (前端操作)                             N/A      JWT 无状态，前端销毁本地 Token 即可完成“退出”  无                                            无
+
+
+多用户数据隔离机制
+1. ThreadLocal 隔离: 后端通过 UserContext 维护当前请求的 userId。
+2. 数据归属: 笔记(notes)、分类(categories)、标签(tags) 均与 userId 关联。
+3. 权限校验: 所有业务接口均通过 JwtAuthenticationFilter 验证请求头中的 Bearer Token。
+
+
+认证与授权说明
+1. 开放接口: /api/auth/register, /api/auth/login 无需登录。
+2. 认证头: 所有受限接口需携带 Authorization: Bearer <token>。
+3. Token 有效期: 24小时，过期需重新登录。
+
+
+数据库核心表结构
+表名          字段                                  说明
+users         id, username, password, email, role    核心用户表
+notes         id, title, content, user_id, ...       笔记表（含用户外键）
+categories    id, name, description, user_id         分类表（含用户外键）
+note_tags     note_id, tag                          笔记-标签关联表
+tags          id, name, user_id                     标签记录表
