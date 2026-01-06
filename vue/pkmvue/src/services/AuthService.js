@@ -66,6 +66,8 @@ export const AuthService = {
   logout() {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    localStorage.removeItem('pkm_notes_cache')
+    localStorage.removeItem('pkm_theme') // 可选：是否也重置主题
     authState.token = null
     authState.user = null
     authState.isAuthenticated = false

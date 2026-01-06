@@ -63,7 +63,7 @@
       </el-aside>
 
       <!-- 主内容区 -->
-      <el-container>
+      <el-container v-if="authService.state.isAuthenticated">
         <!-- 笔记列表区域 -->
         <el-aside v-if="activeMenu === 'notes'" width="360px" class="notes-sidebar">
           <NoteList
@@ -98,6 +98,14 @@
           <div v-else-if="activeMenu === 'categories'" class="category-manager-wrapper">
             <CategoryManager @category-click="handleCategoryClick" @refresh-categories="loadCategories" />
           </div>
+        </el-main>
+      </el-container>
+
+      <el-container v-else class="unauth-container">
+        <el-main class="welcome-screen">
+          <el-empty description="请先登录以访问您的个人知识库">
+            <el-button type="primary" @click="showLoginDialog">立即登录</el-button>
+          </el-empty>
         </el-main>
       </el-container>
     </el-container>
@@ -420,8 +428,12 @@ const handleLoginSuccess = async () => {
 const handleAuthChange = () => {
   if (!AuthService.isAuthenticated()) {
     notes.value = []
+    categories.value = []
     selectedNote.value = null
-    loadNotesFromLocal()
+    activeTag.value = ''
+    activeCategoryId.value = null
+    // 登出时不应再从本地读取旧数据
+    // loadNotesFromLocal() 已经被 AuthService.logout 中的 removeItem 清理
   }
 }
 
@@ -438,6 +450,7 @@ onUnmounted(() => {
 .app-container {
   height: 100vh;
   background-color: #f5f7fa;
+  transition: background-color 0.3s;
 }
 
 .main-layout {
@@ -559,30 +572,52 @@ onUnmounted(() => {
 .category-manager-wrapper {
   height: 100%;
 }
+
+.unauth-container {
+  height: 100%;
+}
+
+.welcome-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  transition: background-color 0.3s, color 0.3s;
+}
 </style>
 
 <style>
 /* --- 全局暗色模式适配 (针对 Teleport 出来的 Dialog 等) --- */
 
-/* 1. 对话框背景与变量 */
+/* 1. 全局背景适配 */
+body.dark .app-container,
+body.dark .welcome-screen,
+body.dark .main-content,
+body.dark .notes-sidebar,
+body.dark .unauth-container {
+  background-color: #121212 !important;
+  color: #ffffff;
+}
+
+/* 2. 对话框背景与变量 */
 body.dark .el-dialog {
   background-color: #1d1e1f !important;
   --el-dialog-bg-color: #1d1e1f !important;
   border: 1px solid #4c4d4f;
 }
 
-/* 2. 提升标题亮度 */
+/* 3. 提升标题亮度 */
 body.dark .el-dialog__title {
   color: #ffffff !important;
   font-weight: 600;
 }
 
-/* 3. 表单标签文字颜色 */
+/* 4. 表单标签文字颜色 */
 body.dark .el-form-item__label {
   color: #cfd3dc !important;
 }
 
-/* 4. 统一输入框样式 (黑底白字) */
+/* 5. 统一输入框样式 (黑底白字) */
 /* 针对普通的 Input 包装层 */
 body.dark .el-input__wrapper {
   background-color: #141414 !important;
@@ -622,7 +657,18 @@ body.dark .el-button:not(.el-button--primary):not(.el-button--danger) {
   color: #cfd3dc !important;
 }
 
-/* --- 亮色模式样式重置 (解决变黑问题) --- */
+/* 8. 欢迎页暗色模式文字与按钮 */
+body.dark .welcome-screen .el-empty__description p {
+  color: #cfd3dc !important;
+}
+
+body.dark .welcome-screen .el-button--primary {
+  background-color: #409eff !important;
+  border-color: #409eff !important;
+  color: #ffffff !important;
+}
+
+/* --- 亮色模式强制恢复 (解决变黑问题) --- */
 body:not(.dark) .el-dialog {
   background-color: #ffffff !important;
   --el-dialog-bg-color: #ffffff !important;

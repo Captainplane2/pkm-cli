@@ -1,30 +1,31 @@
-功能对应关系
-CLI命令           Web API端点                      HTTP方法  说明                          请求参数（JSON）                              请求头要求
-new               /api/notes                       POST     创建新笔记                  {"title": "笔记标题", "content": "笔记内容"}                Authorization: Bearer <token>
-list              /api/notes                       GET      列出所有笔记（当前用户）    无                                            Authorization: Bearer <token>
-view <id>         /api/notes/{id}                  GET      查看指定笔记详情            无                                            Authorization: Bearer <token>
-edit content      /api/notes/{id}/content          PUT      仅更新笔记内容              {"content": "新内容"}                          Authorization: Bearer <token>
-edit title        /api/notes/{id}/title            PUT      仅更新笔记标题              {"title": "新标题"}                           Authorization: Bearer <token>
-delete            /api/notes/{id}                  DELETE   删除指定笔记                无                                            Authorization: Bearer <token>
-tag add           /api/notes/{id}/tags             POST     为笔记添加标签              {"tag": "标签名"}                             Authorization: Bearer <token>
-tag remove        /api/notes/{id}/tags/{tag}       DELETE   从笔记移除标签              无                                            Authorization: Bearer <token>
-search            /api/notes/search?keyword={}     GET      关键字搜索笔记              无（keyword通过URL参数传递）                    Authorization: Bearer <token>
-tags list         /api/tags                        GET      列出所有标签名              无                                            Authorization: Bearer <token>
-tags stats        /api/tags/statistics             GET      获取标签使用统计            无                                            Authorization: Bearer <token>
-tags search       /api/tags/{tag}/notes            GET      按标签筛选笔记              无                                            Authorization: Bearer <token>
-categories list   /api/categories                  GET      列出所有分类                无                                            Authorization: Bearer <token>
-categories new    /api/categories                  POST     创建新分类                  {"name": "分类名称", "description": "分类描述（可选）"}  Authorization: Bearer <token>
-categories view   /api/categories/{id}             GET      查看分类详情                无                                            Authorization: Bearer <token>
-categories edit   /api/categories/{id}             PUT      更新分类信息                {"name": "新分类名称", "description": "新分类描述（可选）"}  Authorization: Bearer <token>
-categories delete /api/categories/{id}             DELETE   删除分类                    无                                            Authorization: Bearer <token>
-(N/A)             /api/notes/export                GET      导出用户全量数据 (JSON)     无                                            Authorization: Bearer <token>
-(N/A)             /api/notes/import                POST     导入用户全量数据 (JSON)     导入的JSON数据                                Authorization: Bearer <token>
-(N/A)             /api/notes/category/{categoryId} GET      按分类筛选笔记              无                                            Authorization: Bearer <token>
-(N/A)             /api/notes/{id}/category         PUT      修改笔记所属分类            {"categoryId": "分类ID"}                     Authorization: Bearer <token>
-(N/A)             /api/tags/multiple               POST     多标签搜索                  ["标签1", "标签2", ...]                      Authorization: Bearer <token>
-(N/A)             /api/tags/search?keyword={}      GET      标签模糊搜索                无（keyword通过URL参数传递）                    Authorization: Bearer <token>
-(N/A)             /api/categories/{id}/count       GET      获取分类笔记数量            无                                            Authorization: Bearer <token>
+功能对应接口
+CLI命令           Web API端点                      HTTP方法   说明                       请求参数（JSON）
+new               /api/notes                       POST     创建新笔记                  {"title": "笔记标题", "content": "笔记内容"}
+list              /api/notes                       GET      列出所有笔记（当前用户）      无
+view <id>         /api/notes/{id}                  GET      查看指定笔记详情            无
+edit content      /api/notes/{id}/content          PUT      仅更新笔记内容              {"content": "新内容"}
+edit title        /api/notes/{id}/title            PUT      仅更新笔记标题              {"title": "新标题"}
+delete            /api/notes/{id}                  DELETE   删除指定笔记                无
+tag add           /api/notes/{id}/tags             POST     为笔记添加标签              {"tag": "标签名"}
+tag remove        /api/notes/{id}/tags/{tag}       DELETE   从笔记移除标签              无
+search            /api/notes/search?keyword={}     GET      关键字搜索笔记              无（keyword通过URL参数传递）
+tags list         /api/tags                        GET      列出所有标签名              无
+tags stats        /api/tags/statistics             GET      获取标签使用统计            无
+tags search       /api/tags/{tag}/notes            GET      按标签筛选笔记              无
+categories list   /api/categories                  GET      列出所有分类                无
+categories new    /api/categories                  POST     创建新分类                  {"name": "分类名称", "description": "分类描述（可选）"}
+categories view   /api/categories/{id}             GET      查看分类详情                无
+categories edit   /api/categories/{id}             PUT      更新分类信息                {"name": "新分类名称", "description": "新分类描述（可选）"}
+categories delete /api/categories/{id}             DELETE   删除分类                    无
+(N/A)             /api/notes/export                GET      导出用户全量数据 (JSON)     无
+(N/A)             /api/notes/import                POST     导入用户全量数据 (JSON)     导入的JSON数据
+(N/A)             /api/notes/category/{categoryId} GET      按分类筛选笔记              无
+(N/A)             /api/notes/{id}/category         PUT      修改笔记所属分类            {"categoryId": "分类ID"}
+(N/A)             /api/tags/multiple               POST     多标签搜索                  ["标签1", "标签2", ...]
+(N/A)             /api/tags/search?keyword={}      GET      标签模糊搜索                无（keyword通过URL参数传递）
+(N/A)             /api/categories/{id}/count       GET      获取分类笔记数量            无
 
+Postman：以上命令均需添加请求头Authorization: Bearer <token>
 
 用户认证接口（Spring Security + JWT）
 功能         API端点                               HTTP方法  说明                          请求参数（JSON）                              请求头要求

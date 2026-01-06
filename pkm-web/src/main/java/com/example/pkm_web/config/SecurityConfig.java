@@ -69,8 +69,7 @@ public class SecurityConfig {
     }
 
     /**
-     * 创建认证提供者，使用DAO方式验证用户身份
-     * 
+     * 创建认证提供者，使用DAO（Data Access Object Authentication）方式验证用户身份
      * @return AuthenticationProvider 认证提供者实例
      */
     @Bean
@@ -95,7 +94,6 @@ public class SecurityConfig {
 
     /**
      * 创建密码编码器，用于密码的加密和验证
-     * 
      * @return PasswordEncoder 密码编码器实例
      */
     @Bean
@@ -105,7 +103,6 @@ public class SecurityConfig {
 
     /**
      * 配置安全过滤器链，定义HTTP请求的安全策略
-     * 
      * @param http HTTP安全配置对象
      * @return SecurityFilterChain 安全过滤器链实例
      * @throws Exception 配置异常
@@ -113,17 +110,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // 配置CORS跨域资源共享
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // 禁用CSRF跨站请求伪造保护
                 .csrf(AbstractHttpConfigurer::disable)
+                // 配置会话管理为无状态模式
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // 配置HTTP请求授权规则
                 .authorizeHttpRequests(auth -> auth
+                        // 允许所有用户访问注册和登录接口
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                        // 需要认证用户才能访问注销接口
                         .requestMatchers("/api/auth/deregister").authenticated()
+                        // 允许所有用户访问测试接口
                         .requestMatchers("/api/test/**").permitAll()
+                        // 允许所有用户访问监控接口
                         .requestMatchers("/actuator/**").permitAll()
+                        // 其他所有请求都需要认证
                         .anyRequest().authenticated()
                 )
+                // 设置认证提供者
                 .authenticationProvider(authenticationProvider())
+                // 在用户名密码认证过滤器之前添加JWT认证过滤器
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
